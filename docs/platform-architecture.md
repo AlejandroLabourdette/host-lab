@@ -189,6 +189,18 @@ The fields the platform cares about most - `state_dir`, `state_consistency`, `st
 exactly the ones that took the most research to fill in correctly, which is a reasonable sign the
 contract is pointed at the right things.
 
+**The table above is now prose, and [`titles/valheim.yaml`](../titles/valheim.yaml) is the
+artifact.** Since [ADR 0008](decisions/0008-implementation-stack-and-manifest-syntax.md) the
+platform reads the manifest and nothing reads this table, so where they disagree the manifest wins.
+
+That is two descriptions of one title, which is the drift this documentation elsewhere refuses to
+accept, so it is worth saying why it is tolerated here and how. It is tolerated because the two are
+not the same artifact: a reader working out whether the contract holds needs a table they can scan
+against the four other titles, and a machine needs a file with regexes and timeouts in it. Neither
+serves the other's purpose. It is made safe by a test, `test_valheim_matches_the_documented_contract_table`,
+which asserts the manifest against the values in this table. **If they drift, the build fails**,
+which is the only version of "keep them in sync" that survives contact with a year of edits.
+
 ## Where the contract leaks
 
 An honest architecture document names the places its abstraction does not hold. Three of them here.

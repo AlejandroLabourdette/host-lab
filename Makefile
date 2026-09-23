@@ -24,3 +24,6 @@ typecheck:
 
 test:
 	uv run pytest
+
+schema:
+	uv run python -m hostlab.schema

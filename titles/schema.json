@@ -1,0 +1,1096 @@
+{
+  "$defs": {
+    "A2SLiveness": {
+      "additionalProperties": false,
+      "description": "Is it answering? A Steam A2S query on the query port.",
+      "properties": {
+        "kind": {
+          "const": "a2s_query",
+          "title": "Kind",
+          "type": "string"
+        },
+        "port": {
+          "exclusiveMaximum": 65536,
+          "exclusiveMinimum": 0,
+          "title": "Port",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "port"
+      ],
+      "title": "A2SLiveness",
+      "type": "object"
+    },
+    "Admin": {
+      "additionalProperties": false,
+      "description": "A remote administration channel, for titles that have one.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "rcon",
+            "rest_api",
+            "https_api"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "port": {
+          "exclusiveMaximum": 65536,
+          "exclusiveMinimum": 0,
+          "title": "Port",
+          "type": "integer"
+        },
+        "protocol": {
+          "default": "tcp",
+          "enum": [
+            "tcp",
+            "udp"
+          ],
+          "title": "Protocol",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "port"
+      ],
+      "title": "Admin",
+      "type": "object"
+    },
+    "CommandLineConfig": {
+      "additionalProperties": false,
+      "description": "Configuration expressed entirely as command-line flags.\n\nOne member of what will become a union. The other four titles surveyed use\na properties file, an ini, a json file and an in-game manager, and ADR 0005\nconsequence 2 expects the schema to grow for them. It grows when a real\ntitle arrives, not before: a speculative `PropertiesConfig` with no title\nbehind it is the over-building `platform-architecture.md` warns against.",
+      "properties": {
+        "constraints": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "min_length": "#/$defs/MinLengthConstraint",
+                "must_precede": "#/$defs/MustPrecedeConstraint",
+                "not_substring_of": "#/$defs/NotSubstringOfConstraint"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/MinLengthConstraint"
+              },
+              {
+                "$ref": "#/$defs/NotSubstringOfConstraint"
+              },
+              {
+                "$ref": "#/$defs/MustPrecedeConstraint"
+              }
+            ]
+          },
+          "title": "Constraints",
+          "type": "array"
+        },
+        "flags": {
+          "items": {
+            "$ref": "#/$defs/Flag"
+          },
+          "minItems": 1,
+          "title": "Flags",
+          "type": "array"
+        },
+        "format": {
+          "const": "command_line_flags",
+          "title": "Format",
+          "type": "string"
+        },
+        "settings": {
+          "items": {
+            "$ref": "#/$defs/Setting"
+          },
+          "minItems": 1,
+          "title": "Settings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "format",
+        "settings",
+        "flags"
+      ],
+      "title": "CommandLineConfig",
+      "type": "object"
+    },
+    "ConfigHazard": {
+      "additionalProperties": false,
+      "description": "A file the update process overwrites, so configuration never goes there.\n\nADR 0005 defends this field specifically: without it the platform would\nwrite configuration into a file the next update destroys, and the symptom\narrives weeks later with no obvious cause.",
+      "properties": {
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "overwritten_by": {
+          "enum": [
+            "update",
+            "restart"
+          ],
+          "title": "Overwritten By",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "overwritten_by",
+        "evidence"
+      ],
+      "title": "ConfigHazard",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "description": "Where a fact came from, and how much it should be trusted.\n\n`kind` is not decoration. `sources.md` ranks primary sources above\nsecondary ones and requires a document to say which it has, because the\nreader's next move differs: a vendor claim that stops being true will be\ncorrected on a vendor page, while an observed one will not be corrected\nanywhere and has to be re-tested.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "vendor",
+            "community",
+            "observed"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "note": {
+          "description": "What is true, and why it matters",
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "URL or citation",
+          "title": "Source"
+        },
+        "verified": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verified"
+        }
+      },
+      "required": [
+        "kind",
+        "note"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "Flag": {
+      "additionalProperties": false,
+      "description": "One command-line flag, and where its value comes from.\n\nFlags render in declared order. That is load-bearing rather than\nincidental: Iron Gate documents that `-preset` overwrites any previously\nset modifiers, so the order of this list is part of the configuration.",
+      "properties": {
+        "flag": {
+          "pattern": "^-{1,2}[A-Za-z][A-Za-z0-9-]*$",
+          "title": "Flag",
+          "type": "string"
+        },
+        "literal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A fixed value",
+          "title": "Literal"
+        },
+        "repeat": {
+          "default": false,
+          "description": "Emit once per item of a list setting",
+          "title": "Repeat",
+          "type": "boolean"
+        },
+        "value_from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Name of a declared setting",
+          "title": "Value From"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Emit only if this bool setting is true",
+          "title": "When"
+        }
+      },
+      "required": [
+        "flag"
+      ],
+      "title": "Flag",
+      "type": "object"
+    },
+    "GenerationMarkerConsistency": {
+      "additionalProperties": false,
+      "description": "Tell a complete save from one in flight, by a per-generation marker.\n\nValheim writes a new generation and retires the previous one, then writes a\nmarker when the write completed. ADR 0005 defends this field on the grounds\nthat a backup service which only knows \"copy this directory\" cannot tell a\nconsistent copy from a corrupt one, and the whole value of the platform\nrests on the backup being real.",
+      "properties": {
+        "complete_marker": {
+          "description": "Filename template for the marker, with {generation} substituted",
+          "title": "Complete Marker",
+          "type": "string"
+        },
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "generation_pattern": {
+          "description": "Regex with a named group 'generation', matched against filenames",
+          "title": "Generation Pattern",
+          "type": "string"
+        },
+        "kind": {
+          "const": "generation_marker",
+          "title": "Kind",
+          "type": "string"
+        },
+        "world_glob": {
+          "description": "Glob, relative to state_dir, matching each world",
+          "title": "World Glob",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "world_glob",
+        "generation_pattern",
+        "complete_marker",
+        "evidence"
+      ],
+      "title": "GenerationMarkerConsistency",
+      "type": "object"
+    },
+    "Health": {
+      "additionalProperties": false,
+      "description": "Two separate claims, and the manifest carries both.\n\nADR 0005 consequence 4. A server can pass liveness and fail durability\nindefinitely, which is exactly the failure that costs a world, so neither\nfield is optional.",
+      "properties": {
+        "durability": {
+          "$ref": "#/$defs/StateAdvancingDurability"
+        },
+        "liveness": {
+          "$ref": "#/$defs/A2SLiveness"
+        }
+      },
+      "required": [
+        "liveness",
+        "durability"
+      ],
+      "title": "Health",
+      "type": "object"
+    },
+    "HttpAcquire": {
+      "additionalProperties": false,
+      "description": "Fetch a server build over HTTP. Minecraft's shape, not Valheim's.",
+      "properties": {
+        "checksum": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Checksum"
+        },
+        "method": {
+          "const": "http",
+          "title": "Method",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "method",
+        "url"
+      ],
+      "title": "HttpAcquire",
+      "type": "object"
+    },
+    "MinLengthConstraint": {
+      "additionalProperties": false,
+      "description": "A setting must be at least this long.",
+      "properties": {
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "kind": {
+          "const": "min_length",
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "exclusiveMinimum": 0,
+          "title": "Value",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "field",
+        "value",
+        "evidence"
+      ],
+      "title": "MinLengthConstraint",
+      "type": "object"
+    },
+    "MustPrecedeConstraint": {
+      "additionalProperties": false,
+      "description": "One flag must be rendered before another.\n\nValheim's `-preset` discards previously set `-modifier` values, and nothing\nwarns you: the server starts and the world is simply not what was asked\nfor.",
+      "properties": {
+        "before": {
+          "title": "Before",
+          "type": "string"
+        },
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "flag": {
+          "title": "Flag",
+          "type": "string"
+        },
+        "kind": {
+          "const": "must_precede",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "flag",
+        "before",
+        "evidence"
+      ],
+      "title": "MustPrecedeConstraint",
+      "type": "object"
+    },
+    "NotSubstringOfConstraint": {
+      "additionalProperties": false,
+      "description": "A setting must not appear inside other settings.\n\nValheim's, and the reason it exists is that breaking it does not look like\na configuration error: the server logs `Error bad password:` and exits, so\nit presents as a server that will not start.",
+      "properties": {
+        "case_insensitive": {
+          "default": true,
+          "title": "Case Insensitive",
+          "type": "boolean"
+        },
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "kind": {
+          "const": "not_substring_of",
+          "title": "Kind",
+          "type": "string"
+        },
+        "of": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Of",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "field",
+        "of",
+        "evidence"
+      ],
+      "title": "NotSubstringOfConstraint",
+      "type": "object"
+    },
+    "PlayerLists": {
+      "additionalProperties": false,
+      "description": "How player identity and allowlists work.",
+      "properties": {
+        "admin_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Admin File"
+        },
+        "allow_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Allow File"
+        },
+        "allow_semantics": {
+          "anyOf": [
+            {
+              "enum": [
+                "exclusive_allowlist",
+                "additive"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Allow Semantics"
+        },
+        "ban_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ban File"
+        },
+        "evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Evidence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "identity_format": {
+          "description": "Shape of an id, in the title's own terms",
+          "title": "Identity Format",
+          "type": "string"
+        }
+      },
+      "required": [
+        "identity_format"
+      ],
+      "title": "PlayerLists",
+      "type": "object"
+    },
+    "Port": {
+      "additionalProperties": false,
+      "description": "One port, its protocol, its role, and whether it may be remapped.\n\n`remap_allowed` has no default on purpose. Satisfactory cannot remap its\nstandard port but can remap its second one, so the constraint is per-port,\nand a default would let a manifest be silent about the thing that decides\nwhether a configuration is broken.",
+      "properties": {
+        "forward": {
+          "description": "Does this need a rule at the household router?",
+          "title": "Forward",
+          "type": "boolean"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "number": {
+          "exclusiveMaximum": 65536,
+          "exclusiveMinimum": 0,
+          "title": "Number",
+          "type": "integer"
+        },
+        "protocol": {
+          "enum": [
+            "udp",
+            "tcp"
+          ],
+          "title": "Protocol",
+          "type": "string"
+        },
+        "remap_allowed": {
+          "title": "Remap Allowed",
+          "type": "boolean"
+        },
+        "role": {
+          "minLength": 1,
+          "title": "Role",
+          "type": "string"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Only present if this bool setting is true",
+          "title": "When"
+        }
+      },
+      "required": [
+        "number",
+        "protocol",
+        "role",
+        "remap_allowed",
+        "forward"
+      ],
+      "title": "Port",
+      "type": "object"
+    },
+    "Precondition": {
+      "additionalProperties": false,
+      "description": "Something that must be satisfied before first start.\n\nExists for Minecraft's `eula.txt`, which has no analogue in the other four\ntitles surveyed. Valheim declares none, and an empty list is the honest way\nto say so.",
+      "properties": {
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "accept_file",
+          "title": "Kind",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "description",
+        "kind",
+        "path",
+        "content"
+      ],
+      "title": "Precondition",
+      "type": "object"
+    },
+    "Reachability": {
+      "additionalProperties": false,
+      "properties": {
+        "relay": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Relay"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "Reachability",
+      "type": "object"
+    },
+    "Relay": {
+      "additionalProperties": false,
+      "description": "A title's own relay, if it ships one.",
+      "properties": {
+        "enabled_by": {
+          "description": "Name of the bool setting that turns it on",
+          "title": "Enabled By",
+          "type": "string"
+        },
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "removes_port_forwarding": {
+          "title": "Removes Port Forwarding",
+          "type": "boolean"
+        },
+        "rotates_join_code_on_restart": {
+          "title": "Rotates Join Code On Restart",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "enabled_by",
+        "removes_port_forwarding",
+        "rotates_join_code_on_restart",
+        "evidence"
+      ],
+      "title": "Relay",
+      "type": "object"
+    },
+    "Runtime": {
+      "additionalProperties": false,
+      "description": "What the server needs to execute. Normally absorbed by the image.",
+      "properties": {
+        "libraries": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Libraries",
+          "type": "array"
+        },
+        "min_glibc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Glibc"
+        },
+        "min_glibcxx": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Glibcxx"
+        },
+        "platform": {
+          "description": "Container platform, for example linux/amd64",
+          "title": "Platform",
+          "type": "string"
+        }
+      },
+      "required": [
+        "platform"
+      ],
+      "title": "Runtime",
+      "type": "object"
+    },
+    "Setting": {
+      "additionalProperties": false,
+      "description": "One knob the operator sets, in the title's own vocabulary.\n\nADR 0005 consequence 5 forbids a universal configuration vocabulary, so\nthese are named after what the title calls them and are not translated.",
+      "properties": {
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "secret": {
+          "default": false,
+          "title": "Secret",
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "string",
+            "int",
+            "bool",
+            "list"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "description"
+      ],
+      "title": "Setting",
+      "type": "object"
+    },
+    "SignalStop": {
+      "additionalProperties": false,
+      "description": "Stop by sending a signal.\n\nDocker's defaults, SIGTERM after ten seconds, are wrong for every title\nsurveyed: the wrong signal, and a timeout shorter than a large world takes\nto write. Both halves are stated here so neither can be inherited.",
+      "properties": {
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "grace_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Grace Seconds",
+          "type": "integer"
+        },
+        "method": {
+          "const": "signal",
+          "title": "Method",
+          "type": "string"
+        },
+        "signal": {
+          "enum": [
+            "SIGINT",
+            "SIGTERM",
+            "SIGHUP",
+            "SIGQUIT"
+          ],
+          "title": "Signal",
+          "type": "string"
+        }
+      },
+      "required": [
+        "method",
+        "signal",
+        "grace_seconds",
+        "evidence"
+      ],
+      "title": "SignalStop",
+      "type": "object"
+    },
+    "StateAdvancingDurability": {
+      "additionalProperties": false,
+      "description": "Is state still being written? The check that protects the world.\n\n`always-on-operation.md` ranks this above liveness, against the usual\ninstinct, because the failure it catches does not report itself: a\ncontainer reported healthy while every autosave failed silently.",
+      "properties": {
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "kind": {
+          "const": "state_advancing",
+          "title": "Kind",
+          "type": "string"
+        },
+        "max_stale_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Max Stale Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "max_stale_seconds",
+        "evidence"
+      ],
+      "title": "StateAdvancingDurability",
+      "type": "object"
+    },
+    "StateDir": {
+      "additionalProperties": false,
+      "description": "The single path holding everything that must survive.\n\nThe most useful invariant in the evidence table, because it is what makes\nbackup generic across titles that agree on nothing else.",
+      "properties": {
+        "configured_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The flag that points the server at it",
+          "title": "Configured By"
+        },
+        "contains": {
+          "description": "What must be present. A restore that lacks one of these is incomplete",
+          "items": {
+            "type": "string"
+          },
+          "title": "Contains",
+          "type": "array"
+        },
+        "path": {
+          "description": "Path inside the container",
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "StateDir",
+      "type": "object"
+    },
+    "SteamcmdAcquire": {
+      "additionalProperties": false,
+      "description": "Fetch a server build through SteamCMD.",
+      "properties": {
+        "app_id": {
+          "exclusiveMinimum": 0,
+          "title": "App Id",
+          "type": "integer"
+        },
+        "login": {
+          "default": "anonymous",
+          "title": "Login",
+          "type": "string"
+        },
+        "method": {
+          "const": "steamcmd",
+          "title": "Method",
+          "type": "string"
+        },
+        "validate": {
+          "default": true,
+          "title": "Validate",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "method",
+        "app_id"
+      ],
+      "title": "SteamcmdAcquire",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The title contract of ADR 0005. Generated from hostlab.manifest; edit the models, not this file.",
+  "properties": {
+    "acquire": {
+      "discriminator": {
+        "mapping": {
+          "http": "#/$defs/HttpAcquire",
+          "steamcmd": "#/$defs/SteamcmdAcquire"
+        },
+        "propertyName": "method"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/SteamcmdAcquire"
+        },
+        {
+          "$ref": "#/$defs/HttpAcquire"
+        }
+      ],
+      "title": "Acquire"
+    },
+    "admin": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Admin"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "config": {
+      "$ref": "#/$defs/CommandLineConfig"
+    },
+    "config_hazards": {
+      "items": {
+        "$ref": "#/$defs/ConfigHazard"
+      },
+      "title": "Config Hazards",
+      "type": "array"
+    },
+    "health": {
+      "$ref": "#/$defs/Health"
+    },
+    "id": {
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "players": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PlayerLists"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "ports": {
+      "items": {
+        "$ref": "#/$defs/Port"
+      },
+      "minItems": 1,
+      "title": "Ports",
+      "type": "array"
+    },
+    "preconditions": {
+      "items": {
+        "$ref": "#/$defs/Precondition"
+      },
+      "title": "Preconditions",
+      "type": "array"
+    },
+    "reachability": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Reachability"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "runtime": {
+      "$ref": "#/$defs/Runtime"
+    },
+    "state_consistency": {
+      "anyOf": [
+        {
+          "discriminator": {
+            "mapping": {
+              "generation_marker": "#/$defs/GenerationMarkerConsistency"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/GenerationMarkerConsistency"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "State Consistency"
+    },
+    "state_dir": {
+      "$ref": "#/$defs/StateDir"
+    },
+    "stop": {
+      "discriminator": {
+        "mapping": {
+          "signal": "#/$defs/SignalStop"
+        },
+        "propertyName": "method"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/SignalStop"
+        }
+      ],
+      "title": "Stop"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "acquire",
+    "runtime",
+    "config",
+    "state_dir",
+    "ports",
+    "stop",
+    "health"
+  ],
+  "title": "Game server title manifest",
+  "type": "object"
+}

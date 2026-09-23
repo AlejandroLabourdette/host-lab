@@ -436,11 +436,17 @@ world. Step 4 is the only way back.
 
 ## Valheim against the platform contract
 
-Valheim's filled-in manifest lives in
+Valheim's manifest is **[`titles/valheim.yaml`](../../titles/valheim.yaml)**, and since
+[ADR 0008](../decisions/0008-implementation-stack-and-manifest-syntax.md) it is the artifact the
+platform actually reads. Everything in it is drawn from the sections above, and its comments carry
+the same sources.
+
+The prose version stays where it was, in
 **[`platform-architecture.md`, "Valheim against the contract"](../platform-architecture.md#valheim-against-the-contract)**,
-next to the contract it validates. It is deliberately not duplicated here: it is meant to be the
-single declarative description of the title, and two copies drift, which they already had begun to
-do. Everything in it is drawn from the sections above.
+next to the contract it validates, because that is where a reader compares it against four other
+titles. It is still not duplicated *here*. Where the two disagree the manifest wins, and a test
+asserts one against the other so that disagreement fails the build rather than waiting to be
+noticed.
 
 If the generic contract could not express the title it was designed around, the contract would be
 wrong. Every field is expressible, and the two that come out empty - `preconditions` and `admin` -

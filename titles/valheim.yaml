@@ -1,0 +1,460 @@
+# Valheim, as a declarative manifest.
+#
+# This file is the whole of what the platform knows about Valheim. ADR 0005
+# decided that a title is data rather than code, so everything here is a fact
+# about the game, and nothing here is an instruction to the platform.
+#
+# It is also the title's documentation, which is why the comments carry the
+# sources. Read it next to docs/titles/valheim.md and the contract table in
+# docs/platform-architecture.md, and it should be possible to check every
+# value against one of them.
+#
+# Game version this was written against: 1.0.15, released 2026-09-18.
+# Valheim reached 1.0 on 2026-09-09 and shipped fifteen releases in nine days,
+# one of which changed the on-disk world format. Anything here tied to a
+# version has a short shelf life. Check dates on everything, this file included.
+
+id: valheim
+name: Valheim
+
+# --------------------------------------------------------------------------
+# Acquisition
+# --------------------------------------------------------------------------
+# App 896660 is the dedicated server, which is a different app from the 892970
+# game client. Anonymous login: the host needs no Steam account and no game
+# ownership. validate re-checks the download against Steam's manifest; it costs
+# seconds and catches a partial download, which otherwise presents as a server
+# that starts and behaves strangely.
+#
+# Source: Iron Gate, A Guide to Dedicated Servers (2024-04-11), accessed
+# 2026-09-22. https://www.valheimgame.com/support/a-guide-to-dedicated-servers/
+acquire:
+  method: steamcmd
+  app_id: 896660
+  login: anonymous
+  validate: true
+
+# --------------------------------------------------------------------------
+# Runtime
+# --------------------------------------------------------------------------
+# The glibc floor rules out older long-term-support distributions. If the
+# server exits immediately with a symbol or version error rather than a game
+# log, this is why, and the fix is a newer base image rather than anything in
+# the configuration.
+#
+# libpulse is an audio library and the server is headless. It is still
+# required, because the binary links against it regardless. Do not trim it.
+#
+# x86-64 only. There is no ARM build, which is why ADR 0001 rejected a
+# single-board computer.
+#
+# Source: Iron Gate, A Guide to Dedicated Servers (2024-04-11), accessed
+# 2026-09-22.
+runtime:
+  platform: linux/amd64
+  libraries:
+    - libatomic1
+    - libpulse-dev
+    - libpulse0
+  min_glibc: "2.29"
+  min_glibcxx: "3.4.26"
+
+# Nothing has to be accepted or signed before first start. Minecraft's eula.txt
+# has no analogue here. An empty list rather than an omitted field, because
+# "we checked and there are none" is a different claim from "nobody looked".
+preconditions: []
+
+# --------------------------------------------------------------------------
+# Configuration
+# --------------------------------------------------------------------------
+# Valheim is configured entirely by command-line flags. There is no settings
+# file, which is unusual among the five titles surveyed and is why the schema
+# has a command_line_flags format at all.
+config:
+  format: command_line_flags
+
+  settings:
+    - name: server_name
+      type: string
+      required: true
+      description: Name shown in the server browser.
+
+    - name: world_name
+      type: string
+      required: true
+      description: >-
+        World save name. Must match the save directory name exactly,
+        capitalisation included. A mismatch does not error: the server
+        generates a fresh empty world next to the real one.
+
+    - name: password
+      type: string
+      required: true
+      secret: true
+      description: >-
+        Required. The rules are stricter than they look, and both are declared
+        as constraints below because breaking either presents as a server that
+        will not start rather than as a password problem.
+
+    - name: port
+      type: int
+      default: 2456
+      description: Game port. The query port is automatically this plus one.
+
+    - name: public
+      type: int
+      default: 0
+      description: >-
+        1 lists the server in the community browser, 0 hides it. Declared as an
+        int rather than a bool because that is what the flag takes; ADR 0005
+        forbids translating a title's vocabulary. A hidden server is still
+        joinable by address or join code.
+
+    - name: savedir
+      type: string
+      default: /data
+      description: >-
+        Where saves live, inside the container. Set deliberately rather than
+        left to the default under a hidden home directory, per ADR 0003.
+
+    - name: crossplay
+      type: bool
+      default: false
+      description: >-
+        Switch to the PlayFab relay. Removes the port-forwarding requirement
+        and introduces a join code that rotates on every restart.
+
+    - name: preset
+      type: string
+      description: >-
+        World modifier preset. Valid values per Iron Gate: Normal, Casual,
+        Easy, Hard, Hardcore, Immersive, Hammer. Hammer mode blocks some
+        achievements.
+
+    - name: modifiers
+      type: list
+      description: >-
+        Individual world modifiers, one string per flag, for example
+        "raids none". DeathPenalty is the one to agree on as a group before
+        starting, not after someone's first bad death.
+
+    - name: save_interval_seconds
+      type: int
+      default: 1800
+      description: >-
+        Seconds between world saves. This is also the upper bound on what a
+        SIGKILL costs, which is why the stop grace period below is generous.
+
+    - name: backups
+      type: int
+      default: 4
+      description: >-
+        How many rolling backups the game keeps. An undo buffer, not a backup:
+        they are on the same disk as the world. See ADR 0003.
+
+    - name: backup_short_seconds
+      type: int
+      default: 7200
+      description: Interval before the first automatic backup.
+
+    - name: backup_long_seconds
+      type: int
+      default: 43200
+      description: Interval between subsequent automatic backups.
+
+  # Flags render in this order, and the order is part of the configuration.
+  # See the must_precede constraint below.
+  flags:
+    # Unity engine flags rather than Valheim ones, and the only two rows here
+    # that Iron Gate's parameter list does not cover. Always present for a
+    # dedicated server.
+    - flag: -nographics
+    - flag: -batchmode
+
+    - flag: -name
+      value_from: server_name
+    - flag: -world
+      value_from: world_name
+    - flag: -password
+      value_from: password
+    - flag: -port
+      value_from: port
+    - flag: -public
+      value_from: public
+    - flag: -savedir
+      value_from: savedir
+
+    - flag: -crossplay
+      when: crossplay
+
+    # -preset before -modifier. Not cosmetic: see the constraint below.
+    - flag: -preset
+      value_from: preset
+    - flag: -modifier
+      value_from: modifiers
+      repeat: true
+
+    - flag: -saveinterval
+      value_from: save_interval_seconds
+    - flag: -backups
+      value_from: backups
+    - flag: -backupshort
+      value_from: backup_short_seconds
+    - flag: -backuplong
+      value_from: backup_long_seconds
+
+  # Three rules that are Valheim's, declared rather than implemented. This is
+  # the mechanism that keeps ADR 0005's "a title is data" honest: without it,
+  # each of these would be an if-statement in the platform named after a game.
+  constraints:
+    - kind: min_length
+      field: password
+      value: 5
+      evidence:
+        kind: community
+        note: >-
+          Shorter passwords are refused and the server exits. Iron Gate
+          documents no password rule at all; its entire entry is
+          '-password "Secret" - Set the password.' The behaviour is real and
+          reproducible, but no vendor page will announce a change to it.
+        verified: 2026-09-22
+
+    - kind: not_substring_of
+      field: password
+      of:
+        - server_name
+        - world_name
+      case_insensitive: true
+      evidence:
+        kind: community
+        note: >-
+          A password that appears inside the server name or the world name is
+          refused, case-insensitively. A world called Vikings with password
+          viking logs "Error bad password:" and the server exits. So a password
+          problem does not look like a password problem: it looks like a server
+          that will not start, and it is the most common first-run failure.
+        verified: 2026-09-22
+
+    - kind: must_precede
+      flag: -preset
+      before: -modifier
+      evidence:
+        kind: vendor
+        note: >-
+          Iron Gate states both halves: the -modifier entry says "If combined
+          with a preset should be set after", and the -preset entry says
+          "Setting a preset will overwrite any other previous modifiers". The
+          wrong order discards the modifiers silently. Nothing warns you; the
+          server starts and the world is simply not set up the way you asked.
+        source: https://www.valheimgame.com/support/a-guide-to-dedicated-servers/
+        verified: 2026-09-22
+
+# --------------------------------------------------------------------------
+# Config hazards
+# --------------------------------------------------------------------------
+# ADR 0005 defends this field specifically, and Valheim is why it exists.
+config_hazards:
+  - path: start_server.sh
+    overwritten_by: update
+    evidence:
+      kind: community
+      note: >-
+        The shipped launch script is replaced whenever app_update runs, so any
+        configuration put in it is destroyed by the act of patching. The
+        symptom arrives later as a server that came back up with a different
+        name, no password, or the wrong world. Keep launch parameters somewhere
+        Steam does not own.
+      verified: 2026-09-22
+
+# --------------------------------------------------------------------------
+# State
+# --------------------------------------------------------------------------
+state_dir:
+  path: /data
+  configured_by: -savedir
+  contains:
+    # The world directories. Everything that is the world.
+    - worlds_local
+    # The three permission files. They sit outside the world directory and are
+    # easy to forget; rebuilding an allowlist by asking six friends for their
+    # platform IDs again is a tedious evening.
+    - adminlist.txt
+    - permittedlist.txt
+    - bannedlist.txt
+
+# How to tell a complete save from one in flight. The other field ADR 0005
+# defends by name, and the difference between a backup and a corrupt copy.
+state_consistency:
+  kind: generation_marker
+  world_glob: worlds_local/*
+  generation_pattern: '^_main\.(?P<generation>\d+)\.'
+  complete_marker: _main.{generation}.ok
+  evidence:
+    kind: community
+    note: >-
+      Since 1.0 a world is a directory of chunk files, not a file pair. The N
+      in _main.N.* increments on every save cycle: the game writes a new
+      generation and retires the previous one rather than overwriting in place,
+      which is why a half-finished save does not destroy the last good one. The
+      .ok marker is written when a save completes, so a generation with a
+      matching .ok is a consistent point and one without it was still in
+      flight. Iron Gate publishes no save-format reference at all, so these
+      filenames are observed rather than specified. Re-check them against a
+      real installation before trusting anything that parses them.
+    source: https://www.gameserverkings.com/knowledge-base/valheim/valheim-save-location/
+    verified: 2026-09-22
+
+# --------------------------------------------------------------------------
+# Ports
+# --------------------------------------------------------------------------
+# Both game and query traffic are UDP. Forwarding TCP does nothing: the only
+# TCP the server opens is an outbound Steamworks connection on a random port
+# that must never be reachable from outside, so it is not declared here.
+#
+# Iron Gate states the port range, "uses the specified Port AND specified
+# Port+1", but never the protocol. The UDP attribution is from the Valheim Wiki
+# and the reference server implementations, and is therefore secondary.
+ports:
+  - number: 2456
+    protocol: udp
+    role: game
+    remap_allowed: false
+    forward: true
+    note: >-
+      Gameplay. Reachable but 2457 not means the server never appears in a
+      browser; the reverse means it appears, shows a player count, and then
+      refuses to let anyone in.
+
+  - number: 2457
+    protocol: udp
+    role: query
+    remap_allowed: false
+    forward: true
+    note: >-
+      Steam query and A2S. Forward it even on a private server: with public 0
+      nothing gets listed so it looks skippable, but the A2S reply here is the
+      only proof of the network path ADR 0002 accepts. Listing is controlled by
+      -public, not by this port.
+
+  - number: 2458
+    protocol: udp
+    role: crossplay
+    remap_allowed: false
+    forward: false
+    when: crossplay
+    note: >-
+      Associated with the crossplay backend. Guides routinely say to forward
+      2456-2458, but crossplay is relayed and needs no forwarding at all, so
+      forwarding this rarely matters. Iron Gate documents only the port and
+      port+1.
+
+# remap_allowed is false on every port above, for a reason that is Valheim's
+# rather than the platform's: it advertises its own port to the Steam lobby, so
+# remapping produces a listing that advertises a port nobody can reach.
+
+# --------------------------------------------------------------------------
+# Stop
+# --------------------------------------------------------------------------
+# The single highest-consequence setting in the project. Docker's defaults,
+# SIGTERM after 10 seconds, are wrong on both counts.
+stop:
+  method: signal
+  signal: SIGINT
+  grace_seconds: 120
+  evidence:
+    kind: community
+    note: >-
+      Iron Gate documents the behaviour but not the signal: "It is important
+      that you close it by pressing CTRL+C in the Command-window." Ctrl+C sends
+      SIGINT. SIGTERM is unreliable, which is why community tooling and the
+      widely circulated systemd recipe set KillSignal=SIGINT explicitly rather
+      than depending on it. SIGKILL saves nothing and loses everything since
+      the last autosave, up to save_interval_seconds. 120 seconds because a
+      large world takes time to write and the reference container uses the same
+      figure. Verify it rather than assuming: stop the server and check that
+      the newest generation carries a fresh .ok marker.
+    source: https://www.valheimgame.com/support/a-guide-to-dedicated-servers/
+    verified: 2026-09-22
+
+# --------------------------------------------------------------------------
+# Health
+# --------------------------------------------------------------------------
+# Two separate claims, per ADR 0005 consequence 4. A server can pass the first
+# and fail the second indefinitely, and that is exactly the failure that costs
+# a world.
+health:
+  liveness:
+    kind: a2s_query
+    port: 2457
+
+  durability:
+    kind: state_advancing
+    max_stale_seconds: 2400
+    evidence:
+      kind: community
+      note: >-
+        Saves land every save_interval_seconds, 1800 by default, so 2400 allows
+        one interval plus a margin before calling it stale. This is the check
+        that matters: valheim-server-docker issue #802 documents a container
+        reporting healthy, the process running, and every autosave failing
+        silently because a permission fix had been applied to directories as
+        well as files. Every liveness check in the world says that server is
+        fine.
+      source: https://github.com/community-valheim-tools/valheim-server-docker/issues/802
+      verified: 2026-09-22
+
+# --------------------------------------------------------------------------
+# Remote administration
+# --------------------------------------------------------------------------
+# None. No RCON, no console socket, nothing.
+#
+# This is not a gap in the research, it is the finding that shaped the whole
+# platform: ADR 0005 made admin optional because Valheim has none, and ADR 0006
+# put the control plane on the container runtime for the same reason. The
+# consequence is real and accepted: the platform cannot warn players in-game
+# before a restart, kick anyone, or read the live player list from the game.
+admin: null
+
+# --------------------------------------------------------------------------
+# Players
+# --------------------------------------------------------------------------
+players:
+  identity_format: "[Platform]_[UserID]"
+  admin_file: adminlist.txt
+  allow_file: permittedlist.txt
+  allow_semantics: exclusive_allowlist
+  ban_file: bannedlist.txt
+  evidence:
+    kind: vendor
+    note: >-
+      Three plain-text files in the save directory root, one platform user ID
+      per line, case-sensitive. Iron Gate states the allowlist behaviour
+      plainly: "Adding a person on the permitted list will ban everyone else
+      from the server." Intended, and it surprises everyone the first time. An
+      empty file allows everyone; adding one friend locks out the rest of the
+      group.
+    source: https://www.valheimgame.com/support/a-guide-to-dedicated-servers/
+    verified: 2026-09-22
+
+# --------------------------------------------------------------------------
+# Reachability
+# --------------------------------------------------------------------------
+reachability:
+  relay:
+    name: crossplay
+    enabled_by: crossplay
+    removes_port_forwarding: true
+    rotates_join_code_on_restart: true
+    evidence:
+      kind: vendor
+      note: >-
+        Crossplay relays through Microsoft Azure PlayFab Party and, per Iron
+        Gate, "does not require Port Forwarding to be accessible from outside
+        of your local network". It is the only title among the five surveyed
+        that ships its own relay. The cost is latency, a dependency that cannot
+        be debugged locally, and a numeric join code that regenerates on every
+        server restart: a restart at 5am silently invalidates the code every
+        friend has, which is why ADR 0006 consequence 1 makes stage 1 of the
+        control plane mandatory rather than optional if crossplay is used.
+      source: https://www.valheimgame.com/support/a-guide-to-dedicated-servers/
+      verified: 2026-09-22
