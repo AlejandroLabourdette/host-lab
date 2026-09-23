@@ -2,6 +2,8 @@
 
 > Status: accepted
 > Date: 2026-09-22
+> Amended by [0007](0007-host-on-windows-with-docker-desktop-and-wsl2.md): the host does not run
+> Linux. This decision stands; the premise recorded in its context does not.
 
 ## Context
 

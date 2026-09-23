@@ -20,7 +20,8 @@ The documents are written to be read in this order. Each one assumes the ones ab
 | 5 | [`platform-architecture.md`](platform-architecture.md) | What is shared across games, what is specific to one, and where does the boundary go? |
 | 6 | [`remote-control.md`](remote-control.md) | How do friends start, stop and check the server without the owner present? |
 | 7 | [`titles/valheim.md`](titles/valheim.md) | The first concrete case, end to end: bare machine to friends connected. |
-| 8 | [`sources.md`](sources.md) | Where every claim came from, when it was true, and what to re-check when. |
+| 8 | [`windows-host.md`](windows-host.md) | The host is Windows, not Linux. What does that change, and what has to be configured so it survives a reboot nobody asked for? |
+| 9 | [`sources.md`](sources.md) | Where every claim came from, when it was true, and what to re-check when. |
 
 Each document assumes the ones above it and can be read without the ones below. Cross-references
 do point forward where a later document holds the detail, but **never for a prerequisite**: a
@@ -33,7 +34,11 @@ decision, numbered and append-only. An ADR states the context, the options that 
 the table, what each costs, the decision, and the consequences that fall out of it.
 
 ADRs are **immutable once merged**. A decision that turns out to be wrong is not edited: a new ADR
-supersedes it, and the old one is marked `Superseded by NNNN`. This is why trade-off comparisons
+supersedes it, and the old one is marked `Superseded by NNNN`. Where a decision still stands but a
+*premise* recorded in its context turns out to be false, the new ADR **amends** rather than
+supersedes, and the old one is marked `Amended by NNNN`. Supersession would claim a decision was
+reversed; amendment says only that it was reached on one wrong fact and survives it. ADRs 0001 and
+0004 carry such a marker, from [0007](decisions/0007-host-on-windows-with-docker-desktop-and-wsl2.md). This is why trade-off comparisons
 live in ADRs rather than inline in the prose documents - the prose can then be rewritten freely
 without destroying the record of why the shape is what it is.
 
@@ -45,6 +50,7 @@ without destroying the record of why the shape is what it is.
 | [0004](decisions/0004-run-game-servers-as-containers.md) | Run game servers as containers | Accepted |
 | [0005](decisions/0005-describe-titles-with-a-declarative-manifest.md) | Describe titles with a declarative manifest | Accepted |
 | [0006](decisions/0006-give-friends-a-control-plane.md) | Give friends a control plane, starting with read-only status | Accepted |
+| [0007](decisions/0007-host-on-windows-with-docker-desktop-and-wsl2.md) | Host on Windows 11 Home, with the Linux layer in Docker Desktop and WSL2 | Accepted |
 
 ## Layout, and why it is this way
 

@@ -40,6 +40,9 @@ Vendor and standards documentation. These outrank everything below them.
 | [LinuxGSM Valheim](https://linuxgsm.com/servers/vhserver/) | LinuxGSM | ongoing | Valheim supported as `vhserver`; monitor, update and alerting features |
 | [Tailscale connection types](https://tailscale.com/kb/1257/connection-types) | Tailscale | ongoing | Connections start relayed via DERP and are upgraded to direct; direct is lowest latency |
 | [Pocketpair, Palworld Dedicated Server Guide](https://docs.palworldgame.com/dedicated-server-guide) | Pocketpair | ongoing | The vendor authority for the Palworld row. **Listed as where to verify, not as a source consulted**: the page did not render for this revision, so nothing here rests on it |
+| [Accessing network applications with WSL](https://learn.microsoft.com/en-us/windows/wsl/networking) | Microsoft | updated 2026-06-02 | Mirrored networking mode requires Windows 11 22H2+ and enables connecting to WSL from the LAN; the Hyper-V firewall is on by default and blocks inbound until a rule allows it; WSL's VM creator id. **And the load-bearing negative: the documented NAT-mode route, `netsh interface portproxy`, has no UDP mode** |
+| [Advanced settings configuration in WSL](https://learn.microsoft.com/en-us/windows/wsl/wsl-config) | Microsoft | updated 2026-09-16 | Every `.wslconfig` key used in [`windows-host.md`](windows-host.md), its section, its default and its minimum Windows version: `networkingMode`, `firewall`, `memory`, `processors`, `vmIdleTimeout`, `instanceIdleTimeout`, `autoMemoryReclaim`. Also that WSL ignores a malformed file and starts normally |
+| [Sysinternals Autologon](https://learn.microsoft.com/en-us/sysinternals/downloads/autologon) | Microsoft | ongoing | Stores the auto-logon password in LSA secrets rather than as a plain-text registry value |
 
 ## Secondary sources
 
@@ -57,6 +60,7 @@ and **flagged as secondary at the point of use** in each document.
 | [minecraft.wiki, Java Edition server](https://minecraft.wiki/w/Tutorial:Setting_up_a_Java_Edition_server) | Community wiki | Minecraft row of the evidence table: `server.jar` from the official download page, JRE requirement, `eula.txt` refusal to start, port 25565, `server.properties`, `world/` | Community-run, not Mojang |
 | [Official Satisfactory Wiki, Dedicated servers](https://satisfactory.wiki.gg/wiki/Dedicated_servers) | Community wiki | Satisfactory row: app `1690800`, 7777 TCP and UDP, 8888 TCP, HTTPS API, in-game Server Manager, port redirection unsupported on the standard port, and the `-ExternalReliablePort=` exception | Community-run despite the "Official" in its name, which refers to the developer's endorsement rather than authorship |
 | [Enshrouded Wiki, Dedicated Server Hosting](https://enshrouded.fandom.com/wiki/Dedicated_Server_Hosting) | Community wiki | The authority for the Enshrouded row. **Listed as where to verify, not as a source consulted**: not retrievable for this revision | Community-run |
+| [docker/roadmap issue #515](https://github.com/docker/roadmap/issues/515) | Issue tracker | Docker Desktop on Windows requires an interactive logged-on session and has no supported service mode. The reason [ADR 0007](decisions/0007-host-on-windows-with-docker-desktop-and-wsl2.md) needs auto-logon | A long-standing open request, not documentation. Docker does not state the limitation on a product page |
 
 **One repository, two names.** This project was `lloesche/valheim-server-docker` and now lives under
 `community-valheim-tools`; the old path redirects. Older references to "the lloesche image" are the
@@ -88,6 +92,8 @@ Event-driven rather than calendar-driven, because these documents rot on events,
 | **Before relying on any free tier** | Tailscale and playit.gg limits. Free tiers move, and both are load-bearing for a CGNAT branch |
 | **Adding a title to the platform** | Fill in a full manifest from that title's own sources. Do not extrapolate from the table in [`platform-architecture.md`](platform-architecture.md) |
 | **Any change to the save format or the backup job** | Re-run the restore drill in [`save-data-and-backups.md`](save-data-and-backups.md) |
+| **A Windows feature update** | The `.wslconfig` keys and their sections, which have moved as features left preview; whether mirrored mode still carries UDP; and Windows 11 Home's update controls. See [`windows-host.md`](windows-host.md) |
+| **A Docker Desktop major version** | Whether it still needs a logged-on session. If it stops needing one, the auto-logon in [ADR 0007](decisions/0007-host-on-windows-with-docker-desktop-and-wsl2.md) can be removed outright |
 
 ### The highest-risk claims
 
@@ -100,7 +106,11 @@ If time is short, these are the ones where being wrong costs the most.
    of play on every stop. Verify by stopping a server and checking the `.ok` marker.
 3. **Port protocols.** Secondary. Getting it wrong means a server that looks correct and is
    unreachable.
-4. **Whether the connection is behind CGNAT.** Not a documentation fact at all, but the one that
+4. **That UDP traverses Docker Desktop's published-port proxy from outside the network.** Not
+   vendor-documented either way, and the whole reachability path rests on it. This is an
+   observation of this host, proven by datagram in [`networking.md`](networking.md), not a fact
+   about the product. Re-prove it after any Docker Desktop or WSL update.
+5. **Whether the connection is behind CGNAT.** Not a documentation fact at all, but the one that
    invalidates the most downstream work if it changes.
 
 ### Conventions for adding sources
