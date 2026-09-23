@@ -126,8 +126,17 @@ def main(argv: "list[str] | None" = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     server = sub.add_parser("serve", help="listen and answer, on the host")
-    server.add_argument("--host", default=os.environ.get("UDPECHO_HOST", "0.0.0.0"))
-    server.add_argument("--port", type=int, default=int(os.environ.get("UDPECHO_PORT", DEFAULT_PORT)))
+    # Binding to all interfaces is the entire point: this listener exists to be
+    # reached from outside the network, published exactly as the game will be.
+    server.add_argument(
+        "--host",
+        default=os.environ.get("UDPECHO_HOST", "0.0.0.0"),  # noqa: S104
+    )
+    server.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ.get("UDPECHO_PORT", DEFAULT_PORT)),
+    )
 
     client = sub.add_parser("probe", help="send and report, from outside the network")
     client.add_argument("--host", required=True, help="the public address to test")

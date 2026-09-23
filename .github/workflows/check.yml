@@ -1,0 +1,31 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Lint, typecheck and test
+        run: make check
+
+  # The prover runs on whatever Python is to hand during a network problem, so
+  # its 3.9 compatibility is a promise this repository has to keep. See ADR 0008.
+  udpecho-portability:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - run: python tools/udpecho/udpecho.py --help

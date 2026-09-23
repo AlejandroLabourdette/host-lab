@@ -1,0 +1,67 @@
+[project]
+name = "hostlab"
+version = "0.1.0"
+description = "Shared machinery that interprets a declarative per-title game server manifest"
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.9",
+    "pyyaml>=6.0",
+]
+
+# The package is hostlab, not platform, because platform is a standard library
+# module and a top-level package of that name shadows it. See ADR 0008.
+# The console entry point arrives with the CLI it would point at.
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.11",
+    "pytest>=8.3",
+    "ruff>=0.6",
+    "types-pyyaml>=6.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E", "W",    # pycodestyle
+    "F",         # pyflakes
+    "I",         # import sorting
+    "UP",        # pyupgrade
+    "B",         # bugbear
+    "SIM",       # simplify
+    "RUF",       # ruff's own
+    "ANN",       # annotations, because mypy strict needs them anyway
+    "S",         # bandit: this code runs subprocesses and talks to the internet
+    "PTH",       # pathlib over os.path
+    "RET", "ARG", "C4", "DTZ", "EM", "ISC", "PIE", "T20",
+]
+ignore = [
+    # The platform shells out to docker and restic by design (ADR 0008), with
+    # fixed argument lists and never through a shell. S603 flags every such
+    # call; the rule that actually matters here, S602 (shell=True), stays on.
+    "S603",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests assert, use fixture paths, and print. That is what tests do.
+"tests/**" = ["S101", "ANN", "T20"]
+# The prover is deliberately stdlib-only and 3.9-compatible so it runs on
+# whatever Python is to hand during a network problem. See ADR 0008.
+"tools/**" = ["ANN", "T20", "UP", "EM", "PTH", "S311"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unreachable = true
+files = ["hostlab", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers --strict-config"

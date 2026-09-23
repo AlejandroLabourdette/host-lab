@@ -242,7 +242,7 @@ mode [`always-on-operation.md`](../always-on-operation.md) says matters most her
 ```
 titles/valheim.yaml       the manifest. Data.
 titles/schema.json        generated from the models, so a manifest is checkable without us
-platform/                 the shared machinery
+hostlab/                  the shared machinery
 images/valheim/           the image, server baked in
 deploy/                   compose, host scripts, the .env contract
 tools/udpecho/            the UDP path prover
@@ -252,6 +252,13 @@ tests/
 `titles/` is a directory from the start for the same reason `docs/titles/` is
 ([`README.md`](../README.md)): titles are the axis this grows along, and making it a directory
 later renames every reference.
+
+**The package is `hostlab` and not `platform`**, which is what the layered model in
+[`platform-architecture.md`](../platform-architecture.md) would suggest. `platform` is a Python
+standard library module, so a top-level package of that name shadows it for us and for anything we
+depend on. The bug that produces is remote from its cause and arrives late, which is exactly the
+kind this project keeps finding in other people's tooling. The layer is still called the platform
+everywhere in prose; only the importable name differs.
 
 ## What this deliberately does not build
 
@@ -273,7 +280,7 @@ this record could have violated and did not:
 1. **The manifest schema is now a compatibility surface.** `titles/schema.json` is generated, so it
    cannot drift from the models, but a field removed or renamed breaks any manifest using it.
 2. **Adding a title stays a documentation exercise**, per ADR 0005 consequence 1. The test of that
-   claim is whether a second title can be added without touching `platform/`, and the constraint
+   claim is whether a second title can be added without touching `hostlab/`, and the constraint
    mechanism is what has to hold for it to be true.
 3. **Updating Valheim now means building an image.** Slower than the reference container's restart,
    and it is what buys a tag that is genuinely a version.

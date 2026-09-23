@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Tool caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets. The contract is deploy/.env.example; the real file never leaves the host.
+.env
+deploy/**/.env
+
+# Local state written by the platform at runtime
+*.local.json
