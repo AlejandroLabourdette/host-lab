@@ -162,8 +162,29 @@ one friend locks out the rest of the group.
 Iron Gate documents the presets by name in its `-preset` entry: "Valid values are: Normal, Casual,
 Easy, Hard, Hardcore, Immersive, Hammer."
 ([A Guide to Dedicated Servers](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/),
-2024-04-11, accessed 2026-09-22.) Individual modifiers cover combat, death penalty, resource rate,
-raids and portals, and are also documented with their permitted values.
+2024-04-11, accessed 2026-09-22.) A preset is the quick way to set everything at once.
+
+Individual modifiers, and their permitted values, are documented on the same page:
+
+| `-modifier` | Values |
+|---|---|
+| `Combat` | `veryeasy`, `easy`, `hard`, `veryhard` |
+| `DeathPenalty` | `casual`, `veryeasy`, `easy`, `hard`, `hardcore` |
+| `Resources` | `muchless`, `less`, `more`, `muchmore`, `most` |
+| `Raids` | `none`, `muchless`, `less`, `more`, `muchmore` |
+| `Portals` | `casual`, `hard`, `veryhard` |
+
+Used as `-modifier raids none`, one flag per modifier.
+
+`-setkey` sets the standalone toggles, one per flag, as `-setkey nomap`. Iron Gate lists four
+valid keys - `nobuildcost`, `playerevents`, `passivemobs`, `nomap` - **but does not describe what
+each one does**, so their effects are not restated here. The names are self-explanatory enough to
+choose from, and the world creation screen in-game shows the same toggles with descriptions if you
+want to confirm one before committing a server to it.
+
+**`DeathPenalty` is the one to agree on as a group before starting**, not after someone's first
+bad death. It is also the setting most likely to cause an argument, which is a reason to decide it
+deliberately rather than inherit it from a preset nobody read.
 
 Two notes worth having before you pick:
 

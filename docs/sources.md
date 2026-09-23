@@ -29,7 +29,7 @@ Vendor and standards documentation. These outrank everything below them.
 
 | Source | Publisher | Published | Supports |
 |---|---|---|---|
-| [A Guide to Dedicated Servers](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/) | Iron Gate | 2024-04-11 | Launch parameters, Linux prerequisites, glibc floor, save paths, `-savedir`, permission list files and the `permittedlist.txt` all-or-nothing behaviour, port range, crossplay needing no port forwarding, stop with Ctrl+C |
+| [A Guide to Dedicated Servers](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/) | Iron Gate | 2024-04-11 | Launch parameters including the world modifier preset names, the `-modifier` values and the `-setkey` keys; Linux prerequisites; glibc floor; save paths and `-savedir`; permission list files and the `permittedlist.txt` all-or-nothing behaviour; port range; crossplay needing no port forwarding; stop with Ctrl+C. **States no password rule** |
 | [Valheim 1.0 FAQ](https://www.valheimgame.com/support/valheim-1-0-faq/) | Iron Gate | 2026-09 | Old saves remain playable, biome generation caveat, crossplay across all platforms, hammer mode blocking achievements |
 | [Patch 1.0.15](https://www.valheimgame.com/news/patch-1-0-15/) | Iron Gate | 2026-09-18 | The 1.0 world conversion bug that damaged item levels, fixed in 1.0.12. Evidence that conversions are risky |
 | [Valheim news index](https://www.valheimgame.com/news/) | Iron Gate | ongoing | Current version and release cadence |
