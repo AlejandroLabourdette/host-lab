@@ -87,6 +87,8 @@ because the method is written down and the test is re-runnable.
 |---|---|---|---|
 | **Docker Desktop's published-port proxy rewrites the source address** of an inbound UDP datagram to its own gateway, so a container never sees the real peer | 2026-09-22 | [`networking.md`](networking.md), [`tools/udpecho`](../tools/udpecho/README.md) | `udpecho`, and read the address in the reply |
 | Whether UDP traverses Docker Desktop, WSL 2 and the Hyper-V firewall from outside the network | *pending* | [`networking.md`](networking.md) | `udpecho probe` from mobile data |
+| **`docker stop` delivers SIGINT to the server as PID 1**, which exits 0 in 0.28 s having written to its state volume as the unprivileged user | 2026-09-22 | [`images/valheim/README.md`](../images/valheim/README.md) | `uv run pytest tests/test_image_signals.py` |
+| **SteamCMD's 32-bit client crashes under x86-64 emulation on Apple Silicon**, so this image must be built on an x86-64 machine. Other 32-bit binaries in the same package do run, so it is SteamCMD specifically | 2026-09-22 | [`images/valheim/README.md`](../images/valheim/README.md) | `docker build --platform linux/amd64 images/valheim` on arm64 |
 | The host returns from an unattended reboot with nobody logged in | *pending* | [`windows-host.md`](windows-host.md) | The acceptance test in that document |
 
 The first row is worth keeping because it corrected a design error rather than confirming one. An

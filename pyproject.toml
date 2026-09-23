@@ -53,7 +53,9 @@ ignore = [
 # Tests assert, print, and hardcode passwords. That is what tests do: the
 # password rules are the most-tested logic here, and testing them requires
 # writing passwords down.
-"tests/**" = ["S101", "S105", "S106", "S107", "ANN", "T20"]
+# S607 as well: tests invoke "docker" from PATH, which is how it is installed
+# and how every other caller of it here finds it.
+"tests/**" = ["S101", "S105", "S106", "S107", "S607", "ANN", "T20"]
 # The prover is deliberately stdlib-only and 3.9-compatible so it runs on
 # whatever Python is to hand during a network problem. See ADR 0008.
 "tools/**" = ["ANN", "T20", "UP", "EM", "PTH", "S311"]
@@ -67,3 +69,6 @@ files = ["hostlab", "tests"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --strict-markers --strict-config"
+markers = [
+    "docker: needs a running Docker daemon. Skipped automatically when there is not one",
+]
