@@ -77,6 +77,23 @@ No single citable source. Treated as weaker than anything above, and flagged in 
 | Password minimum length **and** rejection when it appears in the server or world name | [`titles/valheim.md`](titles/valheim.md) | **Iron Gate documents no password rule at all.** Try it: the server logs `Error bad password:` and exits |
 | Palworld and Enshrouded rows of the evidence table | [`platform-architecture.md`](platform-architecture.md) | **Unverified for this revision**: the Pocketpair guide did not render and the Enshrouded wiki was not retrievable. Marked as such in the table itself. Verify against the vendor guide before using either as more than an illustration |
 
+### Claims resting on our own measurement
+
+Neither primary nor secondary: things nobody has published, which this project observed on its own
+hardware. Weaker than a vendor page because the sample is one machine, but stronger than consensus
+because the method is written down and the test is re-runnable.
+
+| Claim | Measured | Where | Re-run it with |
+|---|---|---|---|
+| **Docker Desktop's published-port proxy rewrites the source address** of an inbound UDP datagram to its own gateway, so a container never sees the real peer | 2026-09-22 | [`networking.md`](networking.md), [`tools/udpecho`](../tools/udpecho/README.md) | `udpecho`, and read the address in the reply |
+| Whether UDP traverses Docker Desktop, WSL 2 and the Hyper-V firewall from outside the network | *pending* | [`networking.md`](networking.md) | `udpecho probe` from mobile data |
+| The host returns from an unattended reboot with nobody logged in | *pending* | [`windows-host.md`](windows-host.md) | The acceptance test in that document |
+
+The first row is worth keeping because it corrected a design error rather than confirming one. An
+earlier draft of `udpecho` used the observed source address to tell a genuine external request from
+a router hairpin. That would have been wrong on exactly the host this project runs on, and only
+running it revealed that.
+
 ## Staleness policy
 
 ### Re-verify when one of these happens

@@ -335,6 +335,115 @@ adding any infrastructure at all.
 | D. Relay VPS | ~$3-5/mo | Nothing | Yes | One chosen hop | Another machine to run |
 | E. Crossplay relay | Free | Nothing | Yes | Relayed | Rotating join code |
 
+## What this household actually has
+
+Everything above is the general case. This section is the particular one, and it is the record a
+future reader needs: which branch of [ADR 0002](decisions/0002-reach-the-server-from-the-internet.md)
+this connection selected, and what was proven rather than assumed.
+
+### The diagnosis
+
+Per [step 1](#step-1-find-out-what-connection-you-actually-have), which is not optional and comes
+before any router configuration.
+
+| | |
+|---|---|
+| Date | *pending* |
+| Router WAN address | *pending* |
+| Observed public address (`curl -4 https://ifconfig.co`) | *pending* |
+| Working IPv6 (`curl -6 https://ifconfig.co`) | *pending* |
+| Verdict | *pending: public static, public dynamic, CGNAT, double NAT, or IPv6-only* |
+| ADR 0002 branch selected | *pending* |
+
+**The group's platforms are known, and they settle the upstream question.** Every player is on
+Steam; nobody is on console or Game Pass. So `-crossplay` is **not mandatory**, branch 2 does not
+apply, and the Steam-native backend with direct UDP is available if the connection allows it.
+Crossplay remains the escape hatch if it does not, at the cost of the rotating join code.
+
+### The extra layer this host adds
+
+The general case assumes the server listens on the host. Here it does not: it listens inside a
+WSL 2 virtual machine, published through Docker Desktop's proxy, behind the Hyper-V firewall
+([ADR 0007](decisions/0007-host-on-windows-with-docker-desktop-and-wsl2.md)). So the path is
+longer than the one the rest of this document describes:
+
+```
+  friend on the internet
+      |
+      v
+  router          <- UDP 2456/2457 forwarded to a DHCP-reserved address
+      |
+      v
+  Windows         <- Defender Firewall rule, Private profile
+      |
+      v
+  Docker Desktop's published-port proxy
+      |
+      v
+  Hyper-V firewall     <- New-NetFirewallHyperVRule, UDP 2456-2457
+      |
+      v
+  WSL 2, mirrored networking
+      |
+      v
+  the container
+```
+
+**No vendor documentation settles whether UDP survives that end to end**, and Microsoft's own
+documented route for the default NAT mode, `netsh interface portproxy`, has no UDP mode at all.
+Two of those layers are therefore assumptions until proven, which is precisely the situation ADR
+0002 wrote its evidence rule for.
+
+### Proving it, before the game exists
+
+[`tools/udpecho`](../tools/udpecho/README.md) is a UDP listener that answers. It is run **published
+exactly as the game will be**, so the proof covers the real path rather than a simplified one:
+
+```
+docker build -t udpecho tools/udpecho
+docker run --rm -p 2456:2456/udp udpecho
+```
+
+Then from outside the network, a phone on mobile data with Wi-Fi off:
+
+```
+python3 udpecho.py probe --host <public address> --port 2456
+```
+
+What makes this admissible where a port checker is not is that the listener **replies**. Silence
+then means something, which is exactly what UDP otherwise denies you.
+
+**What makes it external is where the probe is run from, and nothing else.** The reply does name
+the source address the server observed, and an earlier draft of this document treated that as a
+hairpin detector. Testing it disproved that: Docker Desktop's published-port proxy rewrites the
+source to its own gateway address (observed 2026-09-22), so the server sees the proxy and never the
+client. The line is still worth reading, because a Docker-internal address there confirms the proxy
+is in the path, but it says nothing about origin. Use a phone on mobile data with Wi-Fi off, per
+[verifying it actually works](#verifying-it-actually-works).
+
+Stop the container before starting the game. Both want UDP 2456.
+
+### Result
+
+| | |
+|---|---|
+| Date | *pending* |
+| Probe from | *pending: which network, which device* |
+| Result | *pending: PASS, PARTIAL or FAIL* |
+| Source address seen by the server | *pending. Diagnostic only: Docker Desktop's proxy rewrites it* |
+
+**If this fails, it is a finding about the design and not a bug to work around.** The order to try,
+which follows ADR 0007 and then ADR 0002 rather than being invented here:
+
+1. Docker Engine inside the WSL 2 distribution, without Docker Desktop, so the published port is
+   not behind Docker Desktop's proxy.
+2. `-crossplay`, which removes the port-forwarding requirement entirely and relays through PlayFab.
+   It costs one flag and no infrastructure, and it makes stage 1 of the control plane mandatory
+   rather than optional, because the join code rotates on every restart
+   ([ADR 0006](decisions/0006-give-friends-a-control-plane.md) consequence 1).
+3. The escape hatches in [when port forwarding cannot work](#when-port-forwarding-cannot-work),
+   in the order ADR 0002 sets.
+
 ## Verifying it actually works
 
 This is the part most guides omit, and the omission is why people spend hours unsure whether their
