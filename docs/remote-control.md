@@ -317,6 +317,28 @@ Three more behaviours worth knowing:
   commands. One standing message is edited rather than a new one sent each
   cycle, because a channel full of "still up" teaches people to mute it.
 
+### How this stops working without telling anyone
+
+Two failure modes share a shape worth naming: **the server stays healthy, the bot stays healthy,
+and the group simply stops being told anything.** Neither raises an error at the place it happens,
+which is the same reason the save-staleness check exists.
+
+**The chat id changes when a group becomes a supergroup.** Telegram promotes a group on its own,
+at a size threshold or when certain features are enabled, and the id changes shape from a plain
+negative number to one beginning `-100`. The configured id then refers to something that no longer
+exists. Re-run the discovery from
+[`deploy/.env.example`](../deploy/.env.example) and update `deploy/.env`.
+
+**The bot is removed from the group, or the standing message is deleted.** The publisher recovers
+from the second on its own: an edit that fails falls back to sending a new message and remembering
+its id, precisely so that a cleared channel does not leave the status frozen at whatever it last
+said. It cannot recover from the first.
+
+**Both are visible the same way.** `hostlab publish` exits non-zero and prints the refusal, so
+whatever runs it on a schedule will surface them if anyone is looking at it. That is the honest
+limit of stage 1: the publisher can tell you it failed, and there is nowhere for it to say so
+except the channel it just failed to reach.
+
 ### What this costs to attack
 
 Worth stating, because it is the answer to "is a bot token safe in a group
