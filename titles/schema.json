@@ -289,6 +289,23 @@
           "title": "Generation Pattern",
           "type": "string"
         },
+        "hot_copy_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Evidence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why a hot copy is safe. Required when hot_copy_safe is true"
+        },
+        "hot_copy_safe": {
+          "description": "May a copy be taken while the server is running? True only for a title that writes a new generation and retires the old one, rather than overwriting in place. A title that overwrites cannot be copied hot no matter how the copy is verified",
+          "title": "Hot Copy Safe",
+          "type": "boolean"
+        },
         "kind": {
           "const": "generation_marker",
           "title": "Kind",
@@ -302,6 +319,7 @@
       },
       "required": [
         "kind",
+        "hot_copy_safe",
         "world_glob",
         "generation_pattern",
         "complete_marker",

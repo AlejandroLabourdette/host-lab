@@ -16,6 +16,7 @@ from __future__ import annotations
 import shutil
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -221,3 +222,90 @@ def test_a_damaged_state_can_be_copied_deliberately(
     assert restored is not None
     # It came back exactly as damaged as it went in, which is the honest result.
     assert not restored.is_consistent
+
+
+# ---------------------------------------------------------------------------
+# Hot copies
+# ---------------------------------------------------------------------------
+# ADR 0010's proxy refuses every mutating call, deliberately, so the agent
+# cannot stop the server before copying. Every automated backup is therefore a
+# hot copy, and ADR 0003 calls that the option most likely to be subtly wrong.
+# A title has to declare it safe and say why.
+
+
+def test_a_running_title_that_declares_hot_copies_safe_is_copied(
+    repository: Repository, state_dir: Path
+) -> None:
+    """Valheim writes a new generation and retires the old one rather than
+    overwriting in place, so a copy taken mid-write still contains an intact
+    earlier generation. That is the claim, and it is in the manifest."""
+    manifest = load_manifest(VALHEIM)
+    assert manifest.state_consistency is not None
+    assert manifest.state_consistency.hot_copy_safe
+
+    # Reaches restic and fails there if it is absent, which is a different
+    # failure from the refusal being tested.
+    with pytest.raises(BackupFailed) as failure:
+        back_up(manifest, state_dir, repository, server_is_running=True)
+    assert "hot_copy_safe" not in str(failure.value)
+
+
+def test_a_running_title_that_says_nothing_is_refused(
+    repository: Repository,
+    state_dir: Path,
+    valheim_raw: dict[str, Any],
+    write_manifest: Callable[..., Path],
+) -> None:
+    """The default has to be the safe one. A manifest that never considered
+    the question must not be read as having answered it."""
+    import copy
+
+    raw = copy.deepcopy(valheim_raw)
+    raw["state_consistency"]["hot_copy_safe"] = False
+    del raw["state_consistency"]["hot_copy_evidence"]
+
+    manifest = load_manifest(write_manifest(raw))
+
+    with pytest.raises(BackupFailed) as failure:
+        back_up(manifest, state_dir, repository, server_is_running=True)
+
+    assert "hot_copy_safe" in str(failure.value)
+    # And it says what to do instead, rather than only that it will not.
+    assert "Stop the server" in str(failure.value)
+
+
+def test_the_same_title_is_copied_happily_when_stopped(
+    repository: Repository,
+    state_dir: Path,
+    valheim_raw: dict[str, Any],
+    write_manifest: Callable[..., Path],
+) -> None:
+    """The refusal is about the copy being hot, not about the title."""
+    import copy
+
+    raw = copy.deepcopy(valheim_raw)
+    raw["state_consistency"]["hot_copy_safe"] = False
+    del raw["state_consistency"]["hot_copy_evidence"]
+
+    manifest = load_manifest(write_manifest(raw))
+
+    with pytest.raises(BackupFailed) as failure:
+        back_up(manifest, state_dir, repository, server_is_running=False)
+    assert "hot_copy_safe" not in str(failure.value)
+
+
+def test_claiming_a_hot_copy_is_safe_requires_saying_why(
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
+) -> None:
+    """It overrides ADR 0003's recommendation, and a claim that overrides
+    standing advice has to carry its reasoning or it is just an assertion that
+    suits whoever is in a hurry."""
+    import copy
+
+    from hostlab.errors import ManifestInvalid
+
+    raw = copy.deepcopy(valheim_raw)
+    del raw["state_consistency"]["hot_copy_evidence"]
+
+    with pytest.raises(ManifestInvalid, match="hot_copy_evidence"):
+        load_manifest(write_manifest(raw))

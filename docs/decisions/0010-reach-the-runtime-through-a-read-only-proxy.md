@@ -113,7 +113,19 @@ boundary is checked rather than believed.
    silent channel: the absence of a status update means the reader or the proxy, not the game.
 5. **A third-party image is now in the arrangement**, and it is one whose entire job is to refuse
    things. It is pinned, and its behaviour is asserted by a test rather than trusted.
-6. **The reader's container runs unprivileged and mounts the game's state read-only.** Neither is
+6. **The automated backup is a hot copy, and it could not have been anything else.** ADR 0003
+   recommends stopping the server, copying and starting it again, and calls the hot copy "the most
+   complex option and the one most likely to be subtly wrong". The boundary decided here means the
+   agent **cannot** stop the server, so the recommended option is not available to it.
+
+   This is a real cost of this decision and it is not hidden. What makes it acceptable is that the
+   safety of a hot copy turns out to be a per-title fact rather than a general risk: Valheim writes
+   a new generation and retires the previous one rather than overwriting in place, so while
+   generation 8 is being written every file of generation 7 is already complete and untouched. The
+   manifest now carries `state_consistency.hot_copy_safe` with the reasoning, the backup service
+   refuses a hot copy for any title that has not declared it, and the default is the safe one. A
+   title that overwrote in place would have to be stopped by hand.
+7. **The reader's container runs unprivileged and mounts the game's state read-only.** Neither is
    required by this decision, both are cheap, and together they mean the component holding the
    backup credentials is also the one that can do least.
 

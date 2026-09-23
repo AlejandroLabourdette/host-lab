@@ -296,6 +296,17 @@ class GenerationMarkerConsistency(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     kind: Literal["generation_marker"]
+    hot_copy_safe: bool = Field(
+        description=(
+            "May a copy be taken while the server is running? True only for a "
+            "title that writes a new generation and retires the old one, rather "
+            "than overwriting in place. A title that overwrites cannot be copied "
+            "hot no matter how the copy is verified"
+        )
+    )
+    hot_copy_evidence: Evidence | None = Field(
+        default=None, description="Why a hot copy is safe. Required when hot_copy_safe is true"
+    )
     world_glob: str = Field(description="Glob, relative to state_dir, matching each world")
     generation_pattern: str = Field(
         description=r"Regex with a named group 'generation', matched against filenames"
@@ -304,6 +315,22 @@ class GenerationMarkerConsistency(BaseModel):
         description="Filename template for the marker, with {generation} substituted"
     )
     evidence: Evidence
+
+    @model_validator(mode="after")
+    def _a_safe_hot_copy_says_why(self) -> GenerationMarkerConsistency:
+        # ADR 0003 calls the hot copy "the most complex option and the one most
+        # likely to be subtly wrong", and recommends stopping the server
+        # instead. Declaring it safe is therefore a claim that overrides the
+        # default advice, and a claim like that has to carry its reasoning or
+        # it is just an assertion that suits whoever is in a hurry.
+        if self.hot_copy_safe and self.hot_copy_evidence is None:
+            msg = (
+                "hot_copy_safe is true but hot_copy_evidence is missing. ADR 0003 "
+                "recommends stopping the server to copy, so claiming otherwise "
+                "needs a reason"
+            )
+            raise ValueError(msg)
+        return self
 
     @model_validator(mode="after")
     def _pattern_and_marker_agree(self) -> GenerationMarkerConsistency:

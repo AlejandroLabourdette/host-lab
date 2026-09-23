@@ -286,6 +286,27 @@ state_dir:
 # defends by name, and the difference between a backup and a corrupt copy.
 state_consistency:
   kind: generation_marker
+
+  # A copy may be taken while the server is running. This is a real claim, not
+  # a convenience: ADR 0003 recommends stopping the server instead and calls
+  # the hot copy the option most likely to be subtly wrong.
+  hot_copy_safe: true
+  hot_copy_evidence:
+    kind: community
+    note: >-
+      Valheim writes a NEW generation and retires the previous one rather than
+      overwriting in place. That is what makes a hot copy safe here and it is
+      the same property that stops a half-finished save from destroying the
+      last good one: while generation 8 is being written, every file of
+      generation 7 is already complete and no longer being touched. A copy
+      taken mid-write therefore still contains an intact generation 7, and the
+      .ok marker is how the platform confirms which generation that is.
+      A title that overwrote its save in place would not be safe this way, no
+      matter how the copy was verified afterwards, which is why this is
+      declared per title rather than assumed by the backup service.
+    source: https://www.gameserverkings.com/knowledge-base/valheim/valheim-save-location/
+    verified: 2026-09-23
+
   world_glob: worlds_local/*
   generation_pattern: '^_main\.(?P<generation>\d+)\.'
   complete_marker: _main.{generation}.ok

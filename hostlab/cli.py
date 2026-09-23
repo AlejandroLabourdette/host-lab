@@ -11,6 +11,7 @@ Commands, in increasing order of what they touch:
   restore    bring one back, somewhere else, and inspect what arrived
   status     the read-only state reader of ADR 0006 stage 1
   publish    send that status to where the group talks
+  agent      the long-running loop: publish on an interval, back up daily
 
 Nothing here starts, stops or restarts a game server. ADR 0006 stages control
 and this is stage 1; the reader ships alone, which is what makes it safe.
@@ -29,6 +30,7 @@ import re
 import sys
 from pathlib import Path
 
+from hostlab.agent import AgentConfig, run
 from hostlab.backup import Repository, back_up, restore, snapshots, verify
 from hostlab.compose import render_compose
 from hostlab.errors import HostlabError
@@ -256,6 +258,50 @@ def _add_status_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo", help="restic repository, for the last backup time")
 
 
+def _channel_or_none(state_file: str) -> Channel | None:
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        return None
+    return Channel(token=token, chat_id=chat_id, state_file=Path(state_file))
+
+
+def cmd_agent(args: argparse.Namespace) -> int:
+    manifest = load_manifest(_manifest_path(args.title))
+
+    channel = _channel_or_none(args.state_file)
+    if channel is None:
+        print(
+            "no TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID, so status will be logged "
+            "and not published. Under ADR 0009 the join code is how anyone "
+            "connects, so this is worth fixing rather than living with.",
+            file=sys.stderr,
+        )
+
+    repository: Repository | None = None
+    if args.repo or os.environ.get("RESTIC_REPOSITORY"):
+        repository = _repository(args)
+    else:
+        print("no restic repository, so no backups will be taken", file=sys.stderr)
+
+    backup_at = datetime.time.fromisoformat(args.backup_at) if args.backup_at else None
+
+    run(
+        AgentConfig(
+            manifest=manifest,
+            container=args.container,
+            state_dir=Path(args.state_dir),
+            channel=channel,
+            repository=repository,
+            publish_every=datetime.timedelta(seconds=args.publish_every),
+            backup_at=backup_at,
+            query_host=args.query_host,
+            query_port=args.query_port,
+        )
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="hostlab", description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -315,6 +361,25 @@ def build_parser() -> argparse.ArgumentParser:
     _add_status_arguments(publishing)
     publishing.add_argument("--state-file", default="telegram.local.json")
     publishing.set_defaults(handler=cmd_publish)
+
+    agent = sub.add_parser("agent", help="publish on an interval and back up daily")
+    _add_status_arguments(agent)
+    agent.add_argument("--state-file", default="/opt/hostlab/state/telegram.json")
+    agent.add_argument(
+        "--publish-every",
+        type=int,
+        default=300,
+        help=(
+            "seconds between status publications. This is also how long the "
+            "group stays locked out after a restart rotates the join code"
+        ),
+    )
+    agent.add_argument(
+        "--backup-at",
+        default="05:00",
+        help="local time of the daily backup, HH:MM. A missed one runs as soon as it can",
+    )
+    agent.set_defaults(handler=cmd_agent)
 
     return parser
 

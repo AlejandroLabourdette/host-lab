@@ -279,6 +279,37 @@ Retention is a week of dailies, five weeklies and six monthlies, which is
 deliberately longer than the game's own roughly 38 hours: retention has to
 exceed the time it takes to **notice** a problem, not the time to have one.
 
+### The automated backup is a hot copy, and why that is acceptable here
+
+The recommendation above is to stop the server, copy, and start it again. **The
+scheduled backup does not do that**, and cannot: the agent reaches Docker
+through a proxy that refuses every mutating call
+([ADR 0010](decisions/0010-reach-the-runtime-through-a-read-only-proxy.md)), so
+it has no way to stop anything. That boundary is deliberate and it is what
+makes the read-only status reader read-only in fact rather than by convention.
+
+So the scheduled copy is option 3 above, the one this document calls the most
+likely to be subtly wrong. What rescues it is that **the risk turns out to be a
+property of the title, not of hot copies in general.**
+
+Valheim writes a **new** generation and retires the previous one rather than
+overwriting in place. While generation 8 is being written, every file of
+generation 7 is already complete and is no longer being touched. A copy taken
+mid-write therefore contains an intact generation 7, and the `.ok` marker is how
+the platform confirms which generation that is. It is the same property that
+stops a half-finished save from destroying the last good one.
+
+A title that overwrote its save in place would **not** be safe this way, however
+carefully the copy was verified afterwards. So this is declared per title rather
+than assumed: `state_consistency.hot_copy_safe` carries the claim and the
+reasoning, `hostlab backup` refuses a hot copy for any title that has not made
+it, and the default is to refuse.
+
+**The manual, stop-first backup is still there and is still better.** Run it
+before an update, which is the moment ADR 0003 cares about most: stop the
+server, run `hostlab backup`, start it again. The scheduled copy is the safety
+net, not the ceremony.
+
 **The restic repository password must live somewhere that is not this host.**
 Losing it turns the off-site copy into an encrypted blob nobody can open, which
 is a complete failure of the goal the off-site copy exists for. A password

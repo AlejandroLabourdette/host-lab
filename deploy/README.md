@@ -70,6 +70,21 @@ docker compose --env-file ../.env --profile tools run --rm hostlab     status va
 docker compose --env-file ../.env --profile tools run --rm hostlab     publish valheim --container valheim --state-dir /data
 ```
 
+Once the game is running, start the loop that makes status and backups happen
+without anyone asking:
+
+```bash
+docker compose --env-file ../.env up -d hostlab-agent
+docker logs -f hostlab-agent
+```
+
+It publishes status every five minutes and backs up daily at 05:00. Both
+numbers are in the compose file and both mean something:
+the publish interval is **how long the group stays locked out after a restart
+rotates the join code**, and a missed backup window runs as soon as the machine
+is awake rather than waiting for tomorrow, because on a laptop being asleep at
+05:00 is the normal case.
+
 **The proxy is the point, not plumbing.**
 [ADR 0010](../docs/decisions/0010-reach-the-runtime-through-a-read-only-proxy.md): the Docker
 socket is not an interface with permissions, it is the whole API, so a container holding it could

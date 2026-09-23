@@ -127,6 +127,7 @@ def back_up(
     repository: Repository,
     *,
     require_consistency: bool = True,
+    server_is_running: bool = False,
 ) -> str:
     """Copy the state directory, refusing if it is not in a copyable condition.
 
@@ -134,13 +135,41 @@ def back_up(
     that is already damaged is exactly the one you most want a copy of before
     touching it. It defaults to on, because the usual reason a consistency
     check is in the way is that the check is right.
+
+    `server_is_running` decides whether this is a hot copy. ADR 0003
+    recommends stopping the server instead and calls the hot copy the option
+    most likely to be subtly wrong, so a title has to declare that it is safe
+    and say why. Valheim's is, because it writes a new generation and retires
+    the old one rather than overwriting in place; a title that overwrote would
+    not be, however the copy was verified afterwards.
     """
+    if server_is_running:
+        _refuse_unsafe_hot_copy(manifest)
+
     if require_consistency:
         require_consistent(inspect_state(manifest, state_dir))
 
     output = _run(backup_argv(repository, state_dir, manifest.id), repository.env())
     _run(forget_argv(repository, manifest.id), repository.env())
     return output
+
+
+def _refuse_unsafe_hot_copy(manifest: TitleManifest) -> None:
+    """Refuse to copy a running title that has not said a hot copy is safe."""
+    rule = manifest.state_consistency
+    if rule is not None and rule.hot_copy_safe:
+        return
+
+    message = (
+        f"{manifest.id} is running and its manifest does not declare "
+        "state_consistency.hot_copy_safe.\n\n"
+        "ADR 0003 recommends stopping the server, copying, and starting it "
+        "again, because a copy taken while a title overwrites its save in "
+        "place is a copy of a moment that never existed. Stop the server and "
+        "run this again, or establish that a hot copy is safe for this title "
+        "and declare it in the manifest with the reason."
+    )
+    raise BackupFailed(message)
 
 
 def verify(repository: Repository, *, read_data: bool = False) -> str:

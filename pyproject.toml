@@ -62,6 +62,10 @@ ignore = [
 # looking.
 "hostlab/cli.py" = ["T20"]
 "hostlab/schema.py" = ["T20"]
+# The agent's log IS stdout: that is where `docker logs` collects it, and ADR
+# 0008 chose this shape over cron precisely because a cron job writes to a log
+# nobody reads. Routing it through a logger would put it somewhere else.
+"hostlab/agent.py" = ["T20"]
 # The prover is deliberately stdlib-only and 3.9-compatible so it runs on
 # whatever Python is to hand during a network problem. See ADR 0008.
 "tools/**" = ["ANN", "T20", "UP", "EM", "PTH", "S311"]
