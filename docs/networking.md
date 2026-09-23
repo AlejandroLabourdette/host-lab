@@ -32,7 +32,7 @@ state the protocol. The UDP attribution comes from the wiki and from the referen
 implementations, which is a secondary source, and it is flagged as such here rather than presented
 as vendor documentation.
 
-Three consequences worth stating plainly, because they are where most setups fail:
+Four consequences worth stating plainly, because they are where most setups fail:
 
 **Forwarding TCP does nothing.** A great many guides tell you to forward "TCP/UDP 2456-2458". The
 TCP half is pure superstition. Valheim's gameplay and query traffic are both UDP, and the only TCP

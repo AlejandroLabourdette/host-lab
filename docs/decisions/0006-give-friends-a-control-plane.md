@@ -39,9 +39,10 @@ Two constraints narrow the design:
 
 ### B. Always-on, plus read-only status published where the group already talks (chosen first step)
 
-- **For:** addresses the two information needs, which are the two that are live today. Grants no
-  authority to anyone, so nothing can destroy a world. Nearly no attack surface. Small enough to
-  actually get built.
+- **For:** addresses both information needs, and one of them - "is it up at all" - is live today
+  while neither control need is. (The other, the crossplay join code, only becomes live if
+  crossplay is chosen, which is still undecided.) Grants no authority to anyone, so nothing can
+  destroy a world. Nearly no attack surface. Small enough to actually get built.
 - **Against:** covers neither control need. Somebody still has to wait for the owner to free the
   machine or unstick a hung server.
 - **Verdict:** the right first step. It takes the half of the value that is available now and none

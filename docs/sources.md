@@ -39,10 +39,7 @@ Vendor and standards documentation. These outrank everything below them.
 | [playit.gg](https://playit.gg/) | playit.gg | no date on page | **Valheim is a free game preset and UDP is on the free tier**; Premium at $3/month gates generic TCP, TCP+UDP, SSH and HTTPS; 19 datacentres; players install nothing |
 | [LinuxGSM Valheim](https://linuxgsm.com/servers/vhserver/) | LinuxGSM | ongoing | Valheim supported as `vhserver`; monitor, update and alerting features |
 | [Tailscale connection types](https://tailscale.com/kb/1257/connection-types) | Tailscale | ongoing | Connections start relayed via DERP and are upgraded to direct; direct is lowest latency |
-| [minecraft.wiki, Java Edition server](https://minecraft.wiki/w/Tutorial:Setting_up_a_Java_Edition_server) | minecraft.wiki | ongoing | Minecraft row of the evidence table: `server.jar` from the official download page, JRE requirement, `eula.txt` refusal to start, port 25565, `server.properties`, `world/` |
-| [Official Satisfactory Wiki, Dedicated servers](https://satisfactory.wiki.gg/wiki/Dedicated_servers) | Satisfactory Wiki | ongoing | Satisfactory row: app `1690800`, 7777 TCP and UDP, 8888 TCP, HTTPS API, in-game Server Manager, port redirection unsupported on the standard port |
 | [Pocketpair, Palworld Dedicated Server Guide](https://docs.palworldgame.com/dedicated-server-guide) | Pocketpair | ongoing | The vendor authority for the Palworld row. **Listed as where to verify, not as a source consulted**: the page did not render for this revision |
-| [Enshrouded Wiki, Dedicated Server Hosting](https://enshrouded.fandom.com/wiki/Dedicated_Server_Hosting) | Community wiki | ongoing | The authority for the Enshrouded row. **Listed as where to verify, not as a source consulted**: not retrievable for this revision |
 
 ## Secondary sources
 
@@ -54,13 +51,16 @@ and **flagged as secondary at the point of use** in each document.
 | [Valheim Wiki, Dedicated servers](https://valheim.weirdgloop.org/w/Dedicated_servers) | Community wiki | **UDP** for 2456 and 2457, the Steamworks TCP port that must not be forwarded, `worlds_local` path, crossplay join codes and its lag/timeout caveat | Iron Gate states the port range but never the protocol |
 | [valheim-server-docker](https://github.com/community-valheim-tools/valheim-server-docker) | Project README | **The 1.0 conversion is one-way**, UDP 2458 under crossplay, backup and restart scheduling defaults, a 120 second stop timeout | Iron Gate has not documented the conversion |
 | [valheim-server-docker issue #802](https://github.com/community-valheim-tools/valheim-server-docker/issues/802) | Issue tracker | The silent-autosave-failure case: `0644` on the new per-world directories broke every save while the container reported healthy | A real incident, not documentation |
+| [Valheim 1.0 world folder format](https://www.gameserverkings.com/knowledge-base/valheim/valheim-save-location/) | Vendor knowledge base | The 1.0 directory layout: `_main.N.fwl2`, `.db2`, `.chunks`, `.ok`, `.chunk`, the generation counter | **Iron Gate publishes no save-format reference at all** |
+| [systemd unit gist](https://gist.github.com/cnrat/3605f9892ec535297030fc173d180651) | Community gist | `KillSignal=SIGINT`, the basis for the SIGTERM-is-unreliable caveat | Iron Gate documents Ctrl+C, not signal semantics |
+| [LinuxGSM #4821](https://github.com/GameServerManagers/LinuxGSM/issues/4821) | Issue tracker | LinuxGSM `monitor` no longer detecting a running Valheim server after a game update (2025-09-09). A single incident, used as an instance of query-based health checks being coupled to a game's releases | A real incident |
+| [minecraft.wiki, Java Edition server](https://minecraft.wiki/w/Tutorial:Setting_up_a_Java_Edition_server) | Community wiki | Minecraft row of the evidence table: `server.jar` from the official download page, JRE requirement, `eula.txt` refusal to start, port 25565, `server.properties`, `world/` | Community-run, not Mojang |
+| [Official Satisfactory Wiki, Dedicated servers](https://satisfactory.wiki.gg/wiki/Dedicated_servers) | Community wiki | Satisfactory row: app `1690800`, 7777 TCP and UDP, 8888 TCP, HTTPS API, in-game Server Manager, port redirection unsupported on the standard port, and the `-ExternalReliablePort=` exception | Community-run despite the "Official" in its name, which refers to the developer's endorsement rather than authorship |
+| [Enshrouded Wiki, Dedicated Server Hosting](https://enshrouded.fandom.com/wiki/Dedicated_Server_Hosting) | Community wiki | The authority for the Enshrouded row. **Listed as where to verify, not as a source consulted**: not retrievable for this revision | Community-run |
 
 **One repository, two names.** This project was `lloesche/valheim-server-docker` and now lives under
 `community-valheim-tools`; the old path redirects. Older references to "the lloesche image" are the
 same software. It is cited here by its canonical path throughout.
-| [Valheim 1.0 world folder format](https://www.gameserverkings.com/knowledge-base/valheim/valheim-save-location/) | Vendor knowledge base | The 1.0 directory layout: `_main.N.fwl2`, `.db2`, `.chunks`, `.ok`, `.chunk`, the generation counter | **Iron Gate publishes no save-format reference at all** |
-| [systemd unit gist](https://gist.github.com/cnrat/3605f9892ec535297030fc173d180651) | Community gist | `KillSignal=SIGINT`, the basis for the SIGTERM-is-unreliable caveat | Iron Gate documents Ctrl+C, not signal semantics |
-| [LinuxGSM #4821](https://github.com/GameServerManagers/LinuxGSM/issues/4821) | Issue tracker | LinuxGSM `monitor` no longer detecting a running Valheim server after a game update (2025-09-09). A single incident, used as an instance of query-based health checks being coupled to a game's releases | A real incident |
 
 ### Claims resting only on diffuse community consensus
 

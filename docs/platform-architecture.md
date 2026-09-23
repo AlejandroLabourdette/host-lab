@@ -220,8 +220,11 @@ implementation per game. It is a genuine simplification, not a complete one.
 
 ### 3. Satisfactory does not fit the port model
 
-Satisfactory explicitly does not support port redirection, and serves game traffic and its HTTPS
-API on the same port over both TCP and UDP. The generic "map a port, any port" model does not hold.
+Satisfactory does not support port redirection **on its standard port**, and serves game traffic
+and its HTTPS API on that one port over both TCP and UDP. Its second port, the reliable messaging
+one, *can* be remapped, with `-ExternalReliablePort=`. So the generic "map a port, any port" model
+does not hold, and neither does a simple "this title cannot be remapped": the constraint is
+per-port, which is exactly why the flag below has to be per-port too.
 
 **How it is handled:** `ports` carries an explicit "remapping permitted" flag per port. The platform
 must be able to refuse a configuration rather than silently produce a broken server. Valheim has

@@ -418,9 +418,10 @@ If the generic contract could not express the title it was designed around, the 
 wrong. Every field is expressible, and the two that come out empty - `preconditions` and `admin` -
 are empty for real reasons rather than for lack of room.
 
-Two of the contract's fields exist *because* of Valheim: `config_hazards`, from the
-`start_server.sh` trap, and `state_consistency`, from the `.ok` marker. The title drove the
-contract rather than being retrofitted to it, which is what makes this a validation rather than a
+Three of the contract's fields exist *because* of Valheim: `config_hazards`, from the
+`start_server.sh` trap; `state_consistency`, from the `.ok` marker; and `admin` being optional at
+all, because Valheim has no remote administration channel to describe. The title drove the contract
+rather than being retrofitted to it, which is what makes this a validation rather than a
 coincidence.
 
 ## What in this document will rot first
