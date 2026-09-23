@@ -71,7 +71,6 @@ No single citable source. Treated as weaker than anything above, and flagged in 
 | RAM sizing by group size and world age | [`titles/valheim.md`](titles/valheim.md) | Measure your own world. Iron Gate publishes client requirements, not server sizing |
 | Valheim's simulation is largely single-threaded | [`titles/valheim.md`](titles/valheim.md) | Observe per-core load on a busy server |
 | Password minimum length **and** rejection when it appears in the server or world name | [`titles/valheim.md`](titles/valheim.md) | **Iron Gate documents no password rule at all.** Try it: the server logs `Error bad password:` and exits |
-| World modifier preset names | [`titles/valheim.md`](titles/valheim.md) | The in-game world creation screen |
 | Palworld and Enshrouded rows of the evidence table | [`platform-architecture.md`](platform-architecture.md) | **Unverified for this revision**: the Pocketpair guide did not render and the Enshrouded wiki was not retrievable. Marked as such in the table itself. Verify against the vendor guide before using either as more than an illustration |
 
 ## Staleness policy

@@ -108,10 +108,11 @@ below goes on the command that launches `valheim_server.x86_64`.
 | `-backuplong` | `43200` | Long backup interval, seconds |
 | `-nographics -batchmode` | | Headless. Always present for a dedicated server |
 
-**Every flag in the table above is documented by Iron Gate**
+**Every Valheim flag in the table above is documented by Iron Gate**
 ([A Guide to Dedicated Servers](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/),
 2024-04-11, accessed 2026-09-22), whose parameter list also covers `-logFile`, `-instanceid` and
-`-setkey`. `-nographics` and `-batchmode` are Unity engine flags rather than Valheim ones.
+`-setkey`. The one exception is the last row: `-nographics` and `-batchmode` are Unity engine flags
+rather than Valheim ones, and do not appear in Iron Gate's list.
 
 ### Four traps
 
@@ -139,11 +140,15 @@ newly configured server exits immediately, check the password before anything el
 
 #### `-preset` silently overwrites `-modifier`
 
-Iron Gate's guide states the ordering rule directly, in its `-modifier` entry: "If combined with a
-preset should be set after." So **`-preset` goes first and `-modifier` after it.** Put them the
-other way round and the preset discards the individual modifiers, silently. The rule is Iron Gate's
+Iron Gate states both the rule and what goes wrong. The `-modifier` entry says "If combined with a
+preset should be set after", and the `-preset` entry says "Setting a preset will overwrite any
+other previous modifiers."
 ([A Guide to Dedicated Servers](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/),
-2024-04-11); the explanation of what goes wrong when you ignore it is community-observed.
+2024-04-11, accessed 2026-09-22.)
+
+So **`-preset` goes first and `-modifier` after it.** The other way round, the preset discards the
+individual modifiers, and nothing warns you: the server starts and the world simply is not set up
+the way you asked.
 
 #### `permittedlist.txt` is an allowlist, and it is all or nothing
 
@@ -154,9 +159,11 @@ one friend locks out the rest of the group.
 
 ### World modifiers
 
-The official presets are Normal, Casual, Easy, Hard, Hardcore, Immersive and Hammer (community
-documentation, accessed 2026-09-22). Individual modifiers cover combat, death penalty, resource
-rate, raids and portals.
+Iron Gate documents the presets by name in its `-preset` entry: "Valid values are: Normal, Casual,
+Easy, Hard, Hardcore, Immersive, Hammer."
+([A Guide to Dedicated Servers](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/),
+2024-04-11, accessed 2026-09-22.) Individual modifiers cover combat, death penalty, resource rate,
+raids and portals, and are also documented with their permitted values.
 
 Two notes worth having before you pick:
 
