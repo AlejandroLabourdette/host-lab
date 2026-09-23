@@ -121,11 +121,12 @@ Valheim takes rolling backups by itself, controlled by four launch parameters:
 | `-backups` | 4 | How many to retain: the first at the short interval, the rest at the long one |
 
 With the defaults, you have one backup roughly 2 hours old and three more spaced 12 hours apart.
-`-saveinterval` is documented by [Iron Gate](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/)
-(2024-04-11) along with `-backups`; the `-backupshort` and `-backuplong` defaults come from
-community documentation and server tooling rather than from Iron Gate, and are flagged as secondary
-here. All accessed 2026-09-22. Since 1.0 these appear as `_backup_auto-` folders with a timestamp,
-alongside the world folder.
+**All four parameters are documented by Iron Gate**
+([A Guide to Dedicated Servers](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/),
+2024-04-11, accessed 2026-09-22), which describes `-backupshort` as "the interval between the first
+automatic backups" and `-backuplong` as "the interval between the subsequent automatic backups".
+Since 1.0 these appear as `_backup_auto-` folders with a timestamp, alongside the world folder,
+which is a community-observed detail rather than a documented one.
 
 These are genuinely useful. They protect against the most common accident, which is not a disk
 failure but a person: a botched terrain edit, a raid that flattened a base, a mistake nobody wants

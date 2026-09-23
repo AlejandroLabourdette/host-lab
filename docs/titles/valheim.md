@@ -108,11 +108,10 @@ below goes on the command that launches `valheim_server.x86_64`.
 | `-backuplong` | `43200` | Long backup interval, seconds |
 | `-nographics -batchmode` | | Headless. Always present for a dedicated server |
 
-`-name`, `-port`, `-world`, `-password`, `-public`, `-crossplay`, `-preset`, `-saveinterval`,
-`-backups` and `-savedir` are documented by
-[Iron Gate](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/) (2024-04-11).
-`-backupshort`, `-backuplong` and `-modifier` come from community documentation and are secondary.
-All accessed 2026-09-22.
+**Every flag in the table above is documented by Iron Gate**
+([A Guide to Dedicated Servers](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/),
+2024-04-11, accessed 2026-09-22), whose parameter list also covers `-logFile`, `-instanceid` and
+`-setkey`. `-nographics` and `-batchmode` are Unity engine flags rather than Valheim ones.
 
 ### Four traps
 
@@ -128,18 +127,23 @@ the install directory, a systemd unit, or container environment variables.
 
 #### The password rules are stricter than "at least 5 characters"
 
-Valheim also **refuses a password that appears inside the server name or the world name**, and the comparison is
-case-insensitive. A world called `Vikings` with password `viking` logs `Error bad password:` and
-**the server exits.** So a password problem does not look like a password problem: it looks like a
-server that will not start. Community documentation records this behaviour explicitly
-(accessed 2026-09-22); Iron Gate documents only the five-character minimum. **If a newly configured
-server exits immediately, check the password before anything else.**
+Valheim requires at least five characters and **refuses a password that appears inside the server
+name or the world name**, with the comparison case-insensitive. A world called `Vikings` with
+password `viking` logs `Error bad password:` and **the server exits.** So a password problem does
+not look like a password problem: it looks like a server that will not start.
+
+**Both rules are community-sourced, not vendor-documented.** Iron Gate's guide states no password
+constraint at all; its entire entry is `-password "Secret" - Set the password.` The behaviour is
+real and reproducible, but if it ever changes there is no vendor page that will tell you. **If a
+newly configured server exits immediately, check the password before anything else.**
 
 #### `-preset` silently overwrites `-modifier`
 
-If `-preset` appears *after* individual
-`-modifier` flags on the command line, it discards them without warning. Put `-preset` first.
-(Community documentation, accessed 2026-09-22.)
+Iron Gate's guide states the ordering rule directly, in its `-modifier` entry: "If combined with a
+preset should be set after." So **`-preset` goes first and `-modifier` after it.** Put them the
+other way round and the preset discards the individual modifiers, silently. The rule is Iron Gate's
+([A Guide to Dedicated Servers](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/),
+2024-04-11); the explanation of what goes wrong when you ignore it is community-observed.
 
 #### `permittedlist.txt` is an allowlist, and it is all or nothing
 
@@ -439,4 +443,4 @@ Listed so a future reader knows where to look rather than re-verifying everythin
 | Crossplay platform list | PS5 and Switch 2 were added at 1.0 | [Iron Gate 1.0 FAQ](https://www.valheimgame.com/support/valheim-1-0-faq/) |
 | Port protocols | Not stated by Iron Gate; from the wiki and server implementations | [Valheim Wiki](https://valheim.weirdgloop.org/w/Dedicated_servers) |
 | Signal handling | Observed behaviour, not documented by Iron Gate | Test a stop and check the `.ok` marker |
-| `-backupshort` / `-backuplong` defaults | Not in Iron Gate's guide | The server's own log output |
+| Password rules | Not documented by Iron Gate at all; community-observed | Try a password that violates them and read the log |

@@ -27,9 +27,21 @@ implementation is a later ticket. The output here is a boundary and a contract, 
 ## The evidence
 
 Five titles: Valheim in depth because it is the first case, and four the group might plausibly
-play next. Sources and dates are in [`sources.md`](sources.md); the per-title facts below were
-accessed 2026-09-22 and are from a mix of official wikis and community documentation, which is
-flagged where it matters.
+play next. All accessed 2026-09-22, and sourced per title:
+
+| Title | Source | Verified |
+|---|---|---|
+| Valheim | [Iron Gate](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/) and the [Valheim Wiki](https://valheim.weirdgloop.org/w/Dedicated_servers) | Yes, in depth. See [`titles/valheim.md`](titles/valheim.md) |
+| Minecraft (Java) | [minecraft.wiki, Setting up a Java Edition server](https://minecraft.wiki/w/Tutorial:Setting_up_a_Java_Edition_server) | Yes |
+| Satisfactory | [Official Satisfactory Wiki, Dedicated servers](https://satisfactory.wiki.gg/wiki/Dedicated_servers) | Yes |
+| Palworld | [Pocketpair, Dedicated Server Guide](https://docs.palworldgame.com/dedicated-server-guide) | **No.** Vendor page did not render for this revision; values below are from community documentation |
+| Enshrouded | [Enshrouded Wiki, Dedicated Server Hosting](https://enshrouded.fandom.com/wiki/Dedicated_Server_Hosting) | **No.** Not retrievable for this revision; values below are from community documentation |
+
+**The two unverified rows are marked deliberately rather than quietly dropped.** They support an
+argument about the *shape* of game servers, not a runbook, and an error in one of their cells would
+not overturn the conclusion. But per [ADR 0005](decisions/0005-describe-titles-with-a-declarative-manifest.md)
+consequence 1, **a title actually joining the platform needs a full manifest built from primary
+sources**, and neither of these has one yet. Do not treat the row as the research.
 
 | | **Valheim** | **Minecraft (Java)** | **Palworld** | **Satisfactory** | **Enshrouded** |
 |---|---|---|---|---|---|
@@ -43,7 +55,7 @@ flagged where it matters.
 | **Remote admin** | **None. No RCON, no console** | RCON, TCP 25575 | REST API TCP 8212; RCON TCP 25575, deprecated | **Its own HTTPS API on 7777** | None documented |
 | **Save shape** | Directory of chunk files per world | `world/` directory | Save directory | `.sav` files | `savegame/` directory |
 | **Official relay** | **Yes, PlayFab via `-crossplay`** | No | No | No | No |
-| **Port remapping** | Advertises its own port; keep them equal | Fine | Fine | **Explicitly unsupported** | Keep equal |
+| **Port remapping** | Advertises its own port; keep them equal | Fine | Fine | **Unsupported on the standard port**; the reliable port can be remapped via `-ExternalReliablePort=` | Keep equal |
 | **Graceful stop** | **SIGINT specifically** | `stop` via console or RCON | Signal, or REST | Console command; **required or config is lost** | Signal |
 
 Even at five titles, look at how much of that table disagrees with itself. Minecraft is TCP and is

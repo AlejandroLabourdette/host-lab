@@ -236,14 +236,21 @@ than routing around it.
 Every participant joins a private WireGuard-based network. The server is reachable at a private
 address inside it, regardless of what either end's ISP does.
 
-- **Cost:** free for this size. Tailscale's Personal plan covers 6 users and up to 100 devices, and
-  user devices are unlimited per user ([Tailscale pricing](https://tailscale.com/pricing), current
-  as of 2026-04-08, accessed 2026-09-22). Headscale removes the third party entirely at the cost of
-  running it yourself, which needs a reachable host and is therefore circular unless one exists.
-- **Latency:** the best of any option here. Tailscale attempts a direct peer-to-peer path and only
-  falls back to a relay when it cannot establish one, so in the common case there is no
-  intermediary at all ([Tailscale subnet routers](https://tailscale.com/kb/1019/subnets), accessed
-  2026-09-22).
+- **Cost:** free at this size. Tailscale's Personal plan is "Up to 6 users" with "Unlimited user
+  devices" and "Up to 50 tagged resources to start", at $1 per month per tagged resource beyond
+  that ([Tailscale pricing](https://tailscale.com/pricing), accessed 2026-09-22; the page carries
+  no publication date). **The figure that could actually bite this project is the tagged-resource
+  allowance, not a device count**: an always-on server is normally enrolled with a tag, which makes
+  it a tagged resource. Fifty is far more than this needs. Headscale removes the third party
+  entirely at the cost of running it yourself, which needs a reachable host and is therefore
+  circular unless one exists.
+- **Latency:** the best of any option here, though not from the first packet. "All connections
+  start as relayed through a DERP server, and Tailscale then tries to upgrade them to a direct
+  connection", and "Direct connections usually provide the lowest latency and highest throughput,
+  while relayed connections are a fallback when direct connectivity isn't possible"
+  ([Tailscale connection types](https://tailscale.com/kb/1257/connection-types), accessed
+  2026-09-22). A working setup settles on a direct path; one stuck on the relay is a performance
+  problem to investigate rather than the normal case.
 - **The cost that actually matters:** **every player must install and sign in to it.** This is a
   real imposition on friends and it is the reason this is not an automatic win. A subnet router on
   the host removes the requirement for devices that cannot run a client, but only for devices on a
@@ -262,10 +269,13 @@ address inside it, regardless of what either end's ISP does.
 An agent on the host holds an outbound connection to a provider's edge, which rents you a public
 address and port and forwards traffic down the tunnel.
 
-- **Cost:** playit.gg has a free tier, and states that custom TCP/UDP tunnelling - which is what a
-  title without a built-in preset needs - is a Premium feature at $3/month
-  ([playit.gg](https://playit.gg/), accessed 2026-09-22). Verify the current free-tier boundary
-  before relying on it; this is exactly the kind of fact that rots.
+- **Cost: free for Valheim.** playit.gg lists Valheim among its built-in free game presets,
+  alongside Minecraft, Palworld, Terraria and Factorio, and UDP tunnels are on the free tier.
+  Premium, at $3/month, gates generic TCP, TCP+UDP, SSH and HTTPS tunnels plus some additional game
+  presets ([playit.gg](https://playit.gg/), accessed 2026-09-22). For the title this documentation
+  is built around, this option costs nothing. A future title with no preset, needing a generic TCP
+  tunnel, would cost $3/month. Verify the current boundary before relying on it; free tiers rot
+  faster than anything else cited here.
 - **Effort on friends:** **none.** They receive an address and port and connect normally. This is
   the option's real advantage and it is a significant one.
 - **Latency:** every packet is relayed via the provider's nearest datacentre, in both directions.
@@ -282,9 +292,10 @@ address and port and forwards traffic down the tunnel.
 Rent the smallest available VPS purely for its public address. The host dials a WireGuard tunnel
 out to it, and the VPS forwards UDP 2456-2457 down the tunnel.
 
-- **Cost:** a few currency units a month. Violates the zero-recurring-cost constraint, but it is
-  the *smallest possible* violation: the VPS needs no CPU and no disk, because the game still runs
-  at home. Compare against option C's Premium tier, which is the same order of magnitude.
+- **Cost:** a few currency units a month, and it is the *smallest possible* violation of the
+  zero-recurring-cost constraint, since the VPS needs no CPU and no disk and the game still runs at
+  home. It is still a violation, and for Valheim specifically option C is free, which is most of
+  why this ranks below it.
 - **Latency:** one extra hop, and the geography is yours to choose, which is the advantage over C.
   Put the VPS near the group and the penalty is small.
 - **Effort on friends:** none. They get a stable public address and port.
@@ -315,7 +326,7 @@ adding any infrastructure at all.
 |---|---|---|---|---|---|
 | A. Public IP from ISP | Maybe | Nothing | Yes | Best | May be refused |
 | B. Overlay VPN | Free | **Yes, each one** | **No** | Best | Excludes consoles |
-| C. Tunnel service | Free to ~$3/mo | Nothing | Yes | Relayed | Third-party dependency |
+| C. Tunnel service | **Free for Valheim**; $3/mo for a title with no preset | Nothing | Yes | Relayed | Third-party dependency |
 | D. Relay VPS | ~$3-5/mo | Nothing | Yes | One chosen hop | Another machine to run |
 | E. Crossplay relay | Free | Nothing | Yes | Relayed | Rotating join code |
 

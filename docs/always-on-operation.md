@@ -130,13 +130,14 @@ A mature shell framework for game servers, with Valheim supported as `vhserver`
   checks the process and queries the server, then restarts and alerts, which is closer to the right
   health check than most alternatives manage.
 - **Against:** no isolation, so it shares bare systemd's dependency problem. It is a layer with its
-  own conventions and directory layout to learn. Its query-based monitoring has broken against
-  Valheim updates more than once: see LinuxGSM issues
-  [#4060](https://github.com/GameServerManagers/LinuxGSM/issues/4060) and
-  [#4821](https://github.com/GameServerManagers/LinuxGSM/issues/4821) (accessed 2026-09-22), where
-  `monitor` stopped detecting a running Valheim server after game updates. That is not a knock on
-  the project so much as evidence that **game-specific health checks are fragile across updates** -
-  a lesson that applies to whatever is built here.
+  own conventions and directory layout to learn. Its query-based monitoring has broken against a
+  Valheim update at least once: LinuxGSM issue
+  [#4821](https://github.com/GameServerManagers/LinuxGSM/issues/4821) (2025-09-09, accessed
+  2026-09-22), "After Valheim Update LGSM 'monitor' command no longer able to detect if Valheim is
+  up". One incident is not a pattern, and it is not much of a knock on the project. It is worth
+  recording because it is a concrete instance of a general hazard: **a health check that depends on
+  a game's query protocol is coupled to that game's releases**, which argues for also checking
+  something the game cannot break, such as whether saves are advancing.
 - **Verdict:** the strongest option if the platform were only ever going to be a thin wrapper.
 
 ### A full panel (Pterodactyl, PufferPanel, Crafty)

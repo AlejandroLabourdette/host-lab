@@ -34,10 +34,15 @@ Vendor and standards documentation. These outrank everything below them.
 | [Patch 1.0.15](https://www.valheimgame.com/news/patch-1-0-15/) | Iron Gate | 2026-09-18 | The 1.0 world conversion bug that damaged item levels, fixed in 1.0.12. Evidence that conversions are risky |
 | [Valheim news index](https://www.valheimgame.com/news/) | Iron Gate | ongoing | Current version and release cadence |
 | [RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598) | IETF | 2012-04 | `100.64.0.0/10` is Shared Address Space for carrier-grade NAT. The CGNAT diagnostic |
-| [Tailscale pricing](https://tailscale.com/pricing) | Tailscale | current as of 2026-04-08 | Personal plan: 6 users, 100 devices, unlimited user devices |
+| [Tailscale pricing](https://tailscale.com/pricing) | Tailscale | no date on page | Personal plan: up to 6 users, unlimited user devices, up to 50 tagged resources, $1/month each beyond |
 | [Tailscale subnet routers](https://tailscale.com/kb/1019/subnets) | Tailscale | ongoing | What a subnet router reaches, direct peer-to-peer preference, its limitations |
-| [playit.gg](https://playit.gg/) | playit.gg | current | Free tier exists, custom TCP/UDP is Premium at $3/month, 19 datacentres, players install nothing |
+| [playit.gg](https://playit.gg/) | playit.gg | no date on page | **Valheim is a free game preset and UDP is on the free tier**; Premium at $3/month gates generic TCP, TCP+UDP, SSH and HTTPS; 19 datacentres; players install nothing |
 | [LinuxGSM Valheim](https://linuxgsm.com/servers/vhserver/) | LinuxGSM | ongoing | Valheim supported as `vhserver`; monitor, update and alerting features |
+| [Tailscale connection types](https://tailscale.com/kb/1257/connection-types) | Tailscale | ongoing | Connections start relayed via DERP and are upgraded to direct; direct is lowest latency |
+| [minecraft.wiki, Java Edition server](https://minecraft.wiki/w/Tutorial:Setting_up_a_Java_Edition_server) | minecraft.wiki | ongoing | Minecraft row of the evidence table: `server.jar` from the official download page, JRE requirement, `eula.txt` refusal to start, port 25565, `server.properties`, `world/` |
+| [Official Satisfactory Wiki, Dedicated servers](https://satisfactory.wiki.gg/wiki/Dedicated_servers) | Satisfactory Wiki | ongoing | Satisfactory row: app `1690800`, 7777 TCP and UDP, 8888 TCP, HTTPS API, in-game Server Manager, port redirection unsupported on the standard port |
+| [Pocketpair, Palworld Dedicated Server Guide](https://docs.palworldgame.com/dedicated-server-guide) | Pocketpair | ongoing | The vendor authority for the Palworld row. **Listed as where to verify, not as a source consulted**: the page did not render for this revision |
+| [Enshrouded Wiki, Dedicated Server Hosting](https://enshrouded.fandom.com/wiki/Dedicated_Server_Hosting) | Community wiki | ongoing | The authority for the Enshrouded row. **Listed as where to verify, not as a source consulted**: not retrievable for this revision |
 
 ## Secondary sources
 
@@ -51,7 +56,7 @@ and **flagged as secondary at the point of use** in each document.
 | [valheim-server-docker issue #802](https://github.com/community-valheim-tools/valheim-server-docker/issues/802) | Issue tracker | The silent-autosave-failure case: `0644` on the new per-world directories broke every save while the container reported healthy | A real incident, not documentation |
 | [Valheim 1.0 world folder format](https://www.gameserverkings.com/knowledge-base/valheim/valheim-save-location/) | Vendor knowledge base | The 1.0 directory layout: `_main.N.fwl2`, `.db2`, `.chunks`, `.ok`, `.chunk`, the generation counter | **Iron Gate publishes no save-format reference at all** |
 | [systemd unit gist](https://gist.github.com/cnrat/3605f9892ec535297030fc173d180651) | Community gist | `KillSignal=SIGINT`, the basis for the SIGTERM-is-unreliable caveat | Iron Gate documents Ctrl+C, not signal semantics |
-| [LinuxGSM #4060](https://github.com/GameServerManagers/LinuxGSM/issues/4060), [#4821](https://github.com/GameServerManagers/LinuxGSM/issues/4821) | Issue tracker | Valheim query-based monitoring breaking after game updates. Evidence that game-specific health checks are fragile | Real incidents |
+| [LinuxGSM #4821](https://github.com/GameServerManagers/LinuxGSM/issues/4821) | Issue tracker | LinuxGSM `monitor` no longer detecting a running Valheim server after a game update (2025-09-09). A single incident, used as an instance of query-based health checks being coupled to a game's releases | A real incident |
 
 ### Claims resting only on diffuse community consensus
 
@@ -61,11 +66,9 @@ No single citable source. Treated as weaker than anything above, and flagged in 
 |---|---|---|
 | RAM sizing by group size and world age | [`titles/valheim.md`](titles/valheim.md) | Measure your own world. Iron Gate publishes client requirements, not server sizing |
 | Valheim's simulation is largely single-threaded | [`titles/valheim.md`](titles/valheim.md) | Observe per-core load on a busy server |
-| `-backupshort` and `-backuplong` defaults | [`save-data-and-backups.md`](save-data-and-backups.md) | The server's own startup log |
-| Password rejected when it appears in the server or world name | [`titles/valheim.md`](titles/valheim.md) | Try it. The server logs `Error bad password:` and exits |
-| `-preset` after `-modifier` silently discards modifiers | [`titles/valheim.md`](titles/valheim.md) | Set both and inspect the world's actual modifiers |
+| Password minimum length **and** rejection when it appears in the server or world name | [`titles/valheim.md`](titles/valheim.md) | **Iron Gate documents no password rule at all.** Try it: the server logs `Error bad password:` and exits |
 | World modifier preset names | [`titles/valheim.md`](titles/valheim.md) | The in-game world creation screen |
-| Per-title facts for Minecraft, Palworld, Satisfactory, Enshrouded | [`platform-architecture.md`](platform-architecture.md) | Each title's own wiki. These support an argument about *shape*, so an error in one cell would not overturn the conclusion |
+| Palworld and Enshrouded rows of the evidence table | [`platform-architecture.md`](platform-architecture.md) | **Unverified for this revision**: the Pocketpair guide did not render and the Enshrouded wiki was not retrievable. Marked as such in the table itself. Verify against the vendor guide before using either as more than an illustration |
 
 ## Staleness policy
 

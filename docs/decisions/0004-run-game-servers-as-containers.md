@@ -54,9 +54,9 @@ A mature, purpose-built shell framework, with Valheim supported as `vhserver`.
   exist and are better than a first attempt would be. Covers many titles. Its `monitor` both checks
   the process and queries the server, which is closer to a correct health check than most.
 - **Against:** no isolation, so it inherits A's dependency problem. Its query-based monitoring has
-  broken against Valheim updates more than once (LinuxGSM issues
-  [#4060](https://github.com/GameServerManagers/LinuxGSM/issues/4060),
-  [#4821](https://github.com/GameServerManagers/LinuxGSM/issues/4821), accessed 2026-09-22).
+  broken against a Valheim update at least once (LinuxGSM issue
+  [#4821](https://github.com/GameServerManagers/LinuxGSM/issues/4821), 2025-09-09, accessed
+  2026-09-22).
 - **Honest assessment:** this was the closest competitor. If the goal were only "run Valheim
   reliably", LinuxGSM would probably win on the grounds that it already exists and is maintained.
   It loses on isolation, which is the axis that matters most once a second title arrives.
@@ -104,8 +104,9 @@ Docker already being present is noted, and is not the reason.
 5. **Image tags become the version-pinning mechanism**, which makes binary rollback easy and makes
    "latest" a dangerous tag to run in production.
 6. **We do not get LinuxGSM's monitoring for free**, and must build the equivalent. Its Valheim
-   query-check breakages are a warning that game-specific health checks are fragile across updates,
-   which argues for checking that saves are advancing rather than relying only on a game query.
+   query-check breakage is a reminder that a health check coupled to a game's query protocol is
+   coupled to that game's releases, which argues for also checking that saves are advancing rather
+   than relying only on a game query.
 
 ## Revisit if
 
