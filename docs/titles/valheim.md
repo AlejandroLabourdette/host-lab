@@ -156,8 +156,10 @@ rate, raids and portals.
 
 Two notes worth having before you pick:
 
-- **Dedicated servers gained proper world-modifier support in 1.0.** Guidance written before
-  2026-09-09 about modifiers not working on dedicated servers is out of date.
+- **Dedicated servers have supported world modifiers since 0.217.x (2023).** Iron Gate's
+  [dedicated server guide](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/)
+  (2024-04-11) documents `-preset`, `-modifier` and `-setkey`. Older guidance claiming modifiers do
+  not work on dedicated servers is long out of date, but this is not a 1.0 change.
 - **Hammer mode blocks some achievements.** Iron Gate's
   [1.0 FAQ](https://www.valheimgame.com/support/valheim-1-0-faq/) counts it as a temporary cheat
   (accessed 2026-09-22). Worth telling the group before turning it on for a shared world.
@@ -218,11 +220,15 @@ Full analysis in [`networking.md`](../networking.md) and
 | Port | Protocol | Purpose | Forward |
 |---|---|---|---|
 | 2456 | **UDP** | Gameplay | Yes |
-| 2457 | **UDP** | Steam query and A2S, server browser listing | Yes, if the server should be listed |
+| 2457 | **UDP** | Steam query and A2S, server browser listing | **Yes, always** |
 | random high | TCP | Steamworks internal | **Never** |
 
-Two rules that are not obvious:
+Three rules that are not obvious:
 
+- **Forward 2457 even on a private server.** With `-public 0` nothing gets listed, so it looks
+  skippable. It is not: the A2S reply on 2457 is the only proof of the network path this
+  documentation accepts ([ADR 0002](../decisions/0002-reach-the-server-from-the-internet.md)), and
+  without it you cannot tell a working setup from a broken one.
 - **Do not forward TCP 2456-2457.** It does nothing. Both game and query traffic are UDP.
 - **Keep external and internal port numbers identical.** Valheim advertises its own port to the
   Steam lobby, so remapping produces a listing that advertises a port nobody can reach.
@@ -335,7 +341,7 @@ Run in order and stop at the first failure. The step that fails localises the fa
 
 | # | Check | Passing means |
 |---|---|---|
-| 1 | `ss -ulpn \| grep 245` on the host shows 2456 and 2457 | The server is listening on **UDP**. If it shows TCP, a container published the wrong protocol |
+| 1 | `ss -tulpn \| grep 245` on the host shows 2456 and 2457 as **`udp`** | The server is listening on the right protocol. `tcp` here means a container published without `/udp`; nothing at all means a configuration problem |
 | 2 | The world directory has a recent generation with a matching `.ok` | It is saving. This is the check that matters most |
 | 3 | A2S query from another LAN machine to the host answers | Server and host firewall are fine |
 | 4 | A2S query **from outside the network** answers | Forwarding and the ISP path are fine |

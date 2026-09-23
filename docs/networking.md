@@ -21,7 +21,7 @@ Valheim is not an HTTP service and the usual intuitions do not transfer.
 | Port | Protocol | Purpose | Forward it? |
 |---|---|---|---|
 | 2456 (the `-port` value) | **UDP** | Gameplay RPC. The actual game traffic. | Yes |
-| 2457 (`-port` + 1) | **UDP** | Steam query port, including A2S. Public lobby registration, metadata and server heartbeat. | Yes, if the server should appear in the browser |
+| 2457 (`-port` + 1) | **UDP** | Steam query port, including A2S. Public lobby registration, metadata and server heartbeat. | Yes, always. See below |
 | A random high port | TCP | Steamworks API, for Steam's own internal library use. | **No.** Never expose this. |
 
 Source: [Valheim Wiki, Dedicated servers](https://valheim.weirdgloop.org/w/Dedicated_servers)
@@ -38,6 +38,12 @@ Three consequences worth stating plainly, because they are where most setups fai
 TCP half is pure superstition. Valheim's gameplay and query traffic are both UDP, and the only TCP
 the server opens is an outbound-initiated Steamworks connection on a random port that must not be
 reachable from outside. Forwarding TCP 2456-2457 will not help a broken setup and adds exposure.
+
+**Forward 2457 even for a private server.** It is tempting to skip it when running `-public 0`,
+since nothing needs to be listed. Do not: the A2S reply on 2457 is the only admissible proof that
+the network path works at all ([ADR 0002](decisions/0002-reach-the-server-from-the-internet.md)),
+and without it a working server and a broken one look identical from outside. The listing is
+controlled by `-public`, not by the port.
 
 **The query port is separate from the game port, and they fail differently.** If UDP 2456 is open
 but 2457 is not, players who type the address in manually can connect, but the server never appears
@@ -338,8 +344,10 @@ and a timeout is unambiguous evidence of the opposite.
 
 A practical ladder, in this order, stopping at the first failure:
 
-1. **On the host:** is the process listening on UDP 2456 and 2457? `ss -ulpn | grep 245` should
-   show both. If not, the problem is the server's configuration, not the network.
+1. **On the host:** is the process listening, and on the right protocol? `ss -tulpn | grep 245`
+   shows both TCP and UDP listeners, which matters: if 2456 and 2457 appear as `tcp`, a container
+   published them without `/udp` and the server is unreachable no matter what the router does. If
+   nothing appears at all, the problem is the server's configuration rather than the network.
 2. **From another machine on the LAN:** does an A2S query to the host's LAN address answer? Proves
    the server and the host firewall are fine, and narrows everything remaining to the router and
    beyond.
@@ -360,7 +368,7 @@ months, knowing which rung used to pass is worth more than any amount of re-read
 | In the browser, but connecting times out | UDP **2456** not reachable. Gameplay port rule missing, or the container published TCP |
 | Worked for weeks, then stopped, no changes made | The public address changed (no dynamic DNS, or the updater is broken), or the host's DHCP lease moved and the forwarding rule now points at nothing |
 | Works on the LAN, never from outside | Router rule missing or wrong, or CGNAT. Re-run [step 1](#step-1-find-out-what-connection-you-actually-have) |
-| Nothing works, WAN address starts with `100.` | CGNAT. Port forwarding cannot work. Pick an escape hatch |
+| Nothing works, WAN address is in `100.64.0.0/10` | CGNAT. Port forwarding cannot work. Pick an escape hatch. Note the range, not just a leading `100.`: `100.43.x.x` is ordinary public space |
 | Connects, then drops after a few minutes | Not a forwarding problem. Suspect the relay if on crossplay, upstream bandwidth saturation, or the server process dying - check [`always-on-operation.md`](always-on-operation.md) |
 | Steam friends connect, console friend cannot | `-crossplay` is not enabled. No amount of port forwarding fixes this |
 | Everything is open but the server still does not list | `-public 0`, or the server has not finished its first heartbeat. Listing is not instant |

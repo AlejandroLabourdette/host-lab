@@ -225,9 +225,14 @@ short shelf life.
    This is the step that makes everything after it reversible, and it is the step people skip.
    **On a major version, this is mandatory**, because format conversions are automatic and one-way
    (see [`save-data-and-backups.md`](save-data-and-backups.md)).
-5. **Apply the update.** `steamcmd +login anonymous +app_update 896660 validate +quit` for a direct
-   install, or pulling a new image. `validate` re-checks files against Steam's manifest and is worth
-   the extra seconds.
+5. **Apply the update.** For a direct install, the same command that installed it:
+   `steamcmd +force_install_dir /srv/valheim +login anonymous +app_update 896660 validate +quit`.
+   For a container, pull a new image. `validate` re-checks files against Steam's manifest and is
+   worth the extra seconds.
+   **`+force_install_dir` is not optional and must come before `+login`.** Omit it and SteamCMD
+   patches its own `steamapps` tree instead, leaving the real install on the old build. Nothing
+   fails: step 7 passes because the old binary starts normally, and the problem surfaces days later
+   as players on updated clients being unable to join.
 6. **Preserve your settings.** Steam **overwrites `start_server.sh` on every update**. Any
    configuration living in that file is destroyed by the act of updating. This is a well-known trap
    and the reason launch parameters belong in a separate script, a unit file, or environment
