@@ -26,7 +26,7 @@ The layout it is being built into, so the map exists before all of it does:
 | `docs/` | The design, the decisions, and the operator documentation |
 | `titles/` | One declarative manifest per game. Data, not code |
 | `hostlab/` | The shared machinery that interprets a manifest |
-| `images/` | One container image per title |
+| `images/` | The container images: one per title, plus the platform's own |
 | `deploy/` | Host configuration and the compose files |
 | `tools/` | Diagnostics, including the UDP path prover |
 

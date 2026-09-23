@@ -13,10 +13,15 @@ for different reasons:
 
 ```bash
 cp deploy/.env.example deploy/.env      # then fill it in. It is gitignored.
+
+# The game. x86-64 only, because the server is.
 docker build --platform linux/amd64 -t hostlab/valheim:1.0.15 images/valheim
+
+# The platform's own machinery. Context is the repository root.
+docker build -f images/hostlab/Dockerfile -t hostlab:0.1.0 .
 ```
 
-Tag the image with the version you actually built, never `latest`. See
+Tag the game image with the version you actually built, never `latest`. See
 [`../images/valheim/README.md`](../images/valheim/README.md).
 
 ## Every time
@@ -44,6 +49,37 @@ substitutes it from `.env` at run time, so the file is safe to read over
 someone's shoulder. Editing it directly means the next regeneration silently
 reverts you, which is the same trap as putting configuration in
 `start_server.sh`.
+
+## The platform services
+
+Separate from the game, and hand-written rather than generated, because they are
+not per-title: they would exist if there were five games or none.
+
+```bash
+cd deploy/platform
+docker compose --env-file ../.env up -d docker-socket
+```
+
+That starts the socket proxy. Then the reader runs on demand against it:
+
+```bash
+docker compose --env-file ../.env --profile tools run --rm hostlab     status valheim --container valheim --state-dir /data
+```
+
+```bash
+docker compose --env-file ../.env --profile tools run --rm hostlab     publish valheim --container valheim --state-dir /data
+```
+
+**The proxy is the point, not plumbing.**
+[ADR 0010](../docs/decisions/0010-reach-the-runtime-through-a-read-only-proxy.md): the Docker
+socket is not an interface with permissions, it is the whole API, so a container holding it could
+stop or delete anything on the host. The proxy allows container reads and refuses every mutating
+call, which is what makes
+[ADR 0006](../docs/decisions/0006-give-friends-a-control-plane.md) consequence 5 true by
+construction rather than because our code happens to lack the function.
+
+Verified, not assumed: through the proxy, `docker stop`, `kill`, `rm`, `restart` and `run` all
+return **403 Forbidden**, and `tests/test_runtime_boundary.py` asserts it on every run.
 
 ## After it starts
 
