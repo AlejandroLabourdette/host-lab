@@ -38,7 +38,7 @@ def render() -> str:
 
 def main() -> None:
     SCHEMA_PATH.write_text(render(), encoding="utf-8")
-    print(f"wrote {SCHEMA_PATH}")  # noqa: T201
+    print(f"wrote {SCHEMA_PATH}")
 
 
 if __name__ == "__main__":

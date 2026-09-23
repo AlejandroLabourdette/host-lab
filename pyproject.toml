@@ -10,7 +10,8 @@ dependencies = [
 
 # The package is hostlab, not platform, because platform is a standard library
 # module and a top-level package of that name shadows it. See ADR 0008.
-# The console entry point arrives with the CLI it would point at.
+[project.scripts]
+hostlab = "hostlab.cli:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -56,6 +57,11 @@ ignore = [
 # S607 as well: tests invoke "docker" from PATH, which is how it is installed
 # and how every other caller of it here finds it.
 "tests/**" = ["S101", "S105", "S106", "S107", "S607", "ANN", "T20"]
+# A command line prints. That is its entire job, and routing it through a
+# logger would put the platform's refusals somewhere the operator is not
+# looking.
+"hostlab/cli.py" = ["T20"]
+"hostlab/schema.py" = ["T20"]
 # The prover is deliberately stdlib-only and 3.9-compatible so it runs on
 # whatever Python is to hand during a network problem. See ADR 0008.
 "tools/**" = ["ANN", "T20", "UP", "EM", "PTH", "S311"]

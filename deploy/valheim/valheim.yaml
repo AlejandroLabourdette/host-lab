@@ -1,0 +1,72 @@
+# One Valheim server: what THIS deployment is.
+#
+# titles/valheim.yaml says what the game is and changes when the game does.
+# This file says what this particular server is and changes when the group
+# decides something. Two files because they change for different reasons.
+#
+# Nothing secret lives here. A ${PLACEHOLDER} is expanded from deploy/.env for
+# validation and written back as the placeholder into anything generated, so
+# this file and the compose file it produces are both safe to commit.
+#
+# Apply it with:
+#   uv run hostlab plan valheim --instance deploy/valheim/valheim.yaml
+#   uv run hostlab compose valheim --instance deploy/valheim/valheim.yaml \
+#       --out deploy/valheim/compose.yaml
+#
+# `plan` writes nothing and runs every refusal, so it is the cheap way to find
+# out that a password breaks a rule before a server exits looking like a crash.
+
+deployment:
+  # Tag the image with the Valheim version you built it from. Never `latest`:
+  # ADR 0004 consequence 5 makes the tag the rollback mechanism, and a moving
+  # tag defeats it.
+  image: hostlab/valheim:1.0.15
+
+  container_name: valheim
+
+  # A named Docker volume, which on this host lives inside the WSL 2 virtual
+  # machine's own filesystem. NOT a bind mount under /mnt/c: DrvFs does not
+  # carry POSIX ownership faithfully, and that is the same class of fault as
+  # valheim-server-docker #802. See ADR 0007 and docs/windows-host.md.
+  state_volume: valheim-data
+
+  # The host is also the owner's gaming machine. Two cores for a largely
+  # single-threaded server is not waste: it leaves headroom for the autosave,
+  # which is the moment the server most needs not to be starved and the moment
+  # a world is most at risk. Measure and correct these; the table in
+  # docs/windows-host.md is a starting point, not a finding.
+  memory: 6g
+  cpus: 2
+
+  restart: unless-stopped
+
+settings:
+  server_name: Midgard
+
+  # Must match the save directory name exactly, capitalisation included. A
+  # mismatch does not error; it generates a fresh empty world beside the real
+  # one, and the symptom is an empty world rather than a message.
+  world_name: Midgard
+
+  # At least 5 characters, and it must not appear inside server_name or
+  # world_name. The platform refuses before the server does, because the
+  # server's way of refusing is to exit looking like a crash.
+  password: ${VALHEIM_PASSWORD}
+
+  # 0 keeps the server out of the community browser. It stays joinable by
+  # address. The password is not access control; for a genuinely private world
+  # use permittedlist.txt, remembering that a non-empty one excludes everyone
+  # not on it.
+  public: 0
+
+  # Everyone in this group is on Steam, so crossplay is not required and the
+  # direct UDP path applies: lower latency, no third-party relay, and no join
+  # code that rotates on every restart. See ADR 0002 branch 3.
+  crossplay: false
+
+  # Agree DeathPenalty as a group before starting rather than after someone's
+  # first bad death. Note that -preset is rendered before -modifier, because a
+  # preset silently discards modifiers set before it.
+  # preset: hard
+  # modifiers:
+  #   - raids none
