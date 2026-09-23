@@ -274,7 +274,12 @@ class StateDir(BaseModel):
     )
     contains: list[str] = Field(
         default_factory=list,
-        description="What must be present. A restore that lacks one of these is incomplete",
+        description=(
+            "What belongs to this directory and must travel with a copy of it. "
+            "Not a presence requirement: a title may create some of these lazily, "
+            "and a brand new server legitimately has none of them yet. It is a "
+            "list of what must not be left behind when something IS there"
+        ),
     )
 
 

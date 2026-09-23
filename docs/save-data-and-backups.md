@@ -251,6 +251,39 @@ Practical notes on the off-site copy:
   friend's machine. It also means the world outlives the owner's interest in hosting it, which is
   the deeper version of the problem this project was started to solve.
 
+## The tooling
+
+The rules above are implemented rather than left as instructions, because every
+one of them is a rule people skip under time pressure.
+
+| Command | Does |
+|---|---|
+| `hostlab state valheim --state-dir <dir>` | Reports the newest **complete** generation per world, and exits non-zero if nothing has saved within the manifest's staleness limit |
+| `hostlab backup valheim --state-dir <dir>` | Refuses unless the state is in a copyable condition, copies the whole directory as one unit, applies retention, then verifies the repository |
+| `hostlab snapshots valheim` | What is actually in the repository |
+| `hostlab restore valheim --target <empty dir>` | Restores, then inspects what came back and says whether it holds a complete generation |
+
+Three behaviours are worth knowing before you need them:
+
+- **A generation still being written is ignored**, not copied. That is the
+  `.ok` marker doing its job, expressed as `state_consistency` in the manifest
+  rather than as knowledge inside the backup code.
+- **`backup` refuses an inconsistent state** and says what is wrong with it.
+  `--even-if-damaged` overrides that, and exists for the one case where the
+  check should not win: a state directory that is *already* damaged is the one
+  you most want a copy of before touching it.
+- **`restore` refuses a target that is not empty.** Never restore onto the live
+  world as a test, and never leave two servers pointed at one state directory.
+
+Retention is a week of dailies, five weeklies and six monthlies, which is
+deliberately longer than the game's own roughly 38 hours: retention has to
+exceed the time it takes to **notice** a problem, not the time to have one.
+
+**The restic repository password must live somewhere that is not this host.**
+Losing it turns the off-site copy into an encrypted blob nobody can open, which
+is a complete failure of the goal the off-site copy exists for. A password
+stored only on the machine whose loss you are insuring against is not stored.
+
 ## The restore drill
 
 An untested backup is a belief, not a backup. The failure you are protecting against is rare, will

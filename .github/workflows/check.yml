@@ -16,6 +16,13 @@ jobs:
         with:
           enable-cache: true
 
+      # The backup round trip runs against real restic and a real repository.
+      # ADR 0003's whole thesis is that an unexercised restore path is a
+      # belief, so skipping those tests in CI would defeat the point of having
+      # written them.
+      - name: Install restic
+        run: sudo apt-get update && sudo apt-get install --yes restic
+
       - name: Lint, typecheck and test
         run: make check
 
