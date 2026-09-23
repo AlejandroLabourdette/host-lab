@@ -51,6 +51,7 @@ without destroying the record of why the shape is what it is.
 | [0005](decisions/0005-describe-titles-with-a-declarative-manifest.md) | Describe titles with a declarative manifest | Accepted |
 | [0006](decisions/0006-give-friends-a-control-plane.md) | Give friends a control plane, starting with read-only status | Accepted |
 | [0007](decisions/0007-host-on-windows-with-docker-desktop-and-wsl2.md) | Host on Windows 11 Home, with the Linux layer in Docker Desktop and WSL2 | Accepted |
+| [0008](decisions/0008-implementation-stack-and-manifest-syntax.md) | Implementation stack and manifest syntax | Accepted |
 
 ## Layout, and why it is this way
 
@@ -94,6 +95,11 @@ exists because of a specific way this kind of documentation fails.
 6. **Trade-offs are compared, not asserted.** Where there is a real choice, the alternatives, what
    each costs, and a recommendation all appear. A document that only states the winner has thrown
    away the information the reader needs when the winner does not fit their situation.
-7. **Code fences are illustrative only.** No snippet in this repository is a file to be extracted
-   and run. Nothing here is executable, by design - see the Status note in the repository
-   [`README.md`](../README.md).
+7. **Code fences in `docs/` are illustrative only.** No snippet in this directory is a file to be
+   extracted and run: it is there to show the shape of a command or a file, and the real thing
+   lives outside `docs/`. The repository did once contain nothing executable at all, and
+   [ADR 0008](decisions/0008-implementation-stack-and-manifest-syntax.md) ended that. The
+   convention survives the change because its purpose was never that the repository be inert; it
+   was that **a reader never has to guess whether a fence is documentation or the artifact**. In
+   `docs/`, it is always documentation. Where a document describes something real, it links to the
+   file rather than reproducing it, so the two cannot drift.
