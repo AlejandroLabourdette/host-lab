@@ -13,20 +13,28 @@ context that "the host runs Linux and already has Docker available".
 When the implementation began, the actual host turned out to be:
 
 - **Windows 11 Home.** Not Linux. Linux exists on it only inside WSL2.
+- **A laptop**, not a desktop or a mini-PC. Confirmed 2026-09-23.
+- **On Wi-Fi**, not ethernet. Confirmed 2026-09-23.
 - **The owner's daily driver and gaming machine.** They keep using it for everything, including
   playing Valheim itself, while it hosts. It has to stay usable.
+
+The last two arrived after the first draft of this record, which described a desktop. They are
+called out rather than folded in silently, because each one breaks a specific assumption the
+documentation had made: [`always-on-operation.md`](../always-on-operation.md) tells the reader to
+set BIOS power-on after AC loss, which most laptops do not offer, and
+[`networking.md`](../networking.md) assumes a wired host when it says to reserve a DHCP address.
 
 Neither ADR's *decision* is wrong. 0001 chose an owned always-on x86 machine over a VPS, a managed
 game host and an ARM board, and every argument it made still holds. 0004 chose containers over bare
 systemd, LinuxGSM and a panel, and every argument it made still holds. What was wrong is a premise
-both recorded as settled fact, and that premise is load-bearing for four operational questions the
+both recorded as settled fact, and that premise is load-bearing for six operational questions the
 documentation never asked.
 
 This record is marked as **amending** rather than superseding those two, because supersession would
 claim their decisions were reversed and they were not. The marker added to each is one line, which
 keeps `decisions/` append-only in the way [`README.md`](../README.md) intends.
 
-## The four realities, with evidence
+## The six realities, with evidence
 
 ### 1. Windows Update reboots on its own schedule, and Home cannot stop it
 
@@ -108,6 +116,54 @@ Both contended resources are capped rather than negotiated: `memory` and `proces
 it. The numbers are in [`windows-host.md`](../windows-host.md), because they depend on the machine
 and will change; the decision here is only that they are set explicitly rather than left to default.
 
+### 5. A laptop is a machine designed to stop running
+
+Everything in reality 1 was written for a desktop, and a laptop adds three ways
+to end the always-on premise that no amount of `powercfg /change standby-timeout-ac 0` addresses.
+
+**Closing the lid suspends it.** This is the most likely way this server dies, it takes one
+absent-minded moment, and nothing about it looks like a fault afterwards: the machine is simply
+asleep. The lid action has to be set to do nothing while on AC.
+
+**On battery, the AC power policy does not apply.** Windows keeps a separate policy for DC, so a
+host that is unplugged will sleep on its own schedule no matter what was configured for AC. The
+machine has to stay plugged in, which is a physical operating requirement rather than a setting.
+
+**Modern Standby cannot always be turned off.** Many laptops use S0 low-power idle rather than the
+older S3 sleep, and on those the classic timeout settings do not reliably keep the machine awake.
+Whether this one does is not knowable from documentation: `powercfg /a` reports which sleep states
+the hardware actually supports, and that has to be read rather than assumed.
+
+**The one thing a laptop gives back is real, and ADR 0001 wanted it.** That document lists an
+uninterruptible power supply as "optional, and the cheapest real upgrade available", because it
+turns most domestic power events into a non-event. **A laptop has one built in.** A power cut
+becomes a non-event for free, and the BIOS power-on-after-AC-loss setting
+[`always-on-operation.md`](../always-on-operation.md) asks for, which most laptops do not offer,
+stops mattering as much because the machine never went down.
+
+### 6. Wi-Fi is the network path, and the server is UDP-only
+
+Valheim sends world state to every connected player over UDP, with no retransmission layer
+underneath it. Wi-Fi contributes jitter and loss that ethernet does not, and the way that presents
+in Valheim is not a disconnection: it is rubber-banding and delayed damage, which
+[`titles/valheim.md`](../titles/valheim.md) warns is the same symptom as CPU saturation. **So the
+network path and the resource limits can produce an identical complaint**, and telling them apart
+later costs an evening.
+
+Two consequences follow immediately:
+
+- **Wi-Fi adapter power saving stops being housekeeping and becomes mandatory.** An adapter that
+  idles down on a machine nobody is touching drops the link, and the symptom is a server that was
+  reachable and now is not, with nothing in any log to say why.
+- **The DHCP reservation must be made against the Wi-Fi adapter's MAC address.** An adapter has
+  one MAC per interface, so a reservation made for the ethernet port does nothing while the host
+  is on Wi-Fi, and a host that later moves to a cable will silently take a different lease and
+  leave the forwarding rule pointing at nothing.
+
+**A cable remains the single cheapest improvement available to this project**, and is recommended
+rather than required. It removes reality 6 entirely for the price of a cable, and it is the only
+item in this record that trades money for the removal of a whole class of fault.
+
 ## Options considered
 
 ### A. A Hyper-V Linux virtual machine on an external switch
@@ -178,7 +234,13 @@ Concretely, and each item exists because of a reality above:
 5. **`networkingMode=mirrored` in `.wslconfig`**, plus a `New-NetFirewallHyperVRule` admitting UDP
    2456 and 2457 specifically rather than opening the Hyper-V firewall wholesale.
 6. **`memory` and `processors` capped in `.wslconfig`**, and per-container limits inside.
-7. **The state directory lives on the WSL2 ext4 filesystem or in a Docker volume, never under
+7. **The lid action set to do nothing on AC**, and the machine kept plugged in. The first is a
+   setting; the second is an operating requirement that no script can enforce.
+8. **`powercfg /a` read rather than assumed**, to find out whether this hardware honours the
+   classic sleep settings or uses Modern Standby.
+9. **Wi-Fi adapter power management off**, and the DHCP reservation made against the **Wi-Fi**
+   MAC address.
+10. **The state directory lives on the WSL2 ext4 filesystem or in a Docker volume, never under
    `/mnt/c`.** DrvFs does not carry POSIX ownership and permission semantics faithfully, and this
    project already has a documented case of exactly that class of bug destroying every autosave
    while the container reported healthy
@@ -203,6 +265,15 @@ auto-logon arrangement or Docker Desktop's UDP publishing proves unreliable in p
    desktop application in the always-on path. Both are in scope for monitoring.
 6. **The documentation's Linux assumption is corrected rather than quietly worked around.** Any
    future reader of 0001 and 0004 reaches this record from the marker on those files.
+7. **The host has a built-in UPS**, which is a genuine gain over the desktop this was written for
+   and closes the optional upgrade ADR 0001 recommended.
+8. **Battery health is now an operational concern.** A laptop kept at full charge on AC
+   permanently degrades its battery, and the battery is the UPS. Where the firmware offers a
+   charge limit, it is worth setting; where it does not, the UPS is on a clock.
+9. **Lag has two plausible causes now, not one.** Wi-Fi jitter and single-core saturation produce
+   the same complaint, so the answer to "it is laggy" starts with which of the two it is.
+10. **A move to ethernet is a network change, not just an improvement.** It takes a new MAC
+    address, so the DHCP reservation and the forwarding rule both have to follow it.
 
 ## Revisit if
 
@@ -215,3 +286,7 @@ auto-logon arrangement or Docker Desktop's UDP publishing proves unreliable in p
   solely the owner's. Option B needs no auto-logon.
 - **The owner stops gaming on this machine**, which removes reality 4 and most of the resource
   capping with it.
+- **The host moves to ethernet.** This removes reality 6, and is the cheapest available
+  improvement to the whole arrangement. Re-run the DHCP reservation against the new MAC.
+- **The laptop is replaced by a desktop or mini-PC**, which is what ADR 0001 originally imagined.
+  That removes reality 5 and gives back the BIOS power-on setting, at the cost of the free UPS.

@@ -20,10 +20,17 @@ guessed, because this is exactly the kind of table that rots into fiction.
 |---|---|
 | Windows edition | Windows 11 Home |
 | Windows version | *pending: `winver`. Mirrored networking requires 22H2 or higher* |
+| Form factor | **Laptop** (confirmed 2026-09-23). See [section 1](#1-never-sleep-never-hibernate-no-fast-startup) |
 | CPU | *pending* |
 | RAM | *pending* |
-| Network | *pending: ethernet or Wi-Fi* |
+| Network | **Wi-Fi** (confirmed 2026-09-23) |
+| Sleep states supported | *pending: `powercfg /a`. Decides whether the classic settings are enough* |
 | Also used for | Daily desktop work and playing games, including Valheim |
+
+**It being a laptop is not a detail.** A laptop is a machine designed to stop running when nobody
+is using it, and three of its defaults each end the always-on premise on their own. It also brings
+one real gain: the battery is the uninterruptible power supply
+[`always-on-operation.md`](always-on-operation.md) calls the cheapest available upgrade.
 
 ## The chain that has to work
 
@@ -32,10 +39,11 @@ the world is down until someone walks over to the machine, which is the dependen
 [`scope-and-goals.md`](scope-and-goals.md) goal G2 exists to remove.
 
 ```
-  mains power returns, or Windows Update reboots at 04:00
+  Windows Update reboots at 04:00
+  (a power cut does NOT appear here: the battery absorbs it)
       |
       v
-  the machine powers on and boots            <- BIOS, and no hibernation state to resume
+  the machine powers on and boots            <- no hibernation state to resume
       |
       v
   Windows logs a session on automatically    <- auto-logon, then immediately locked
@@ -73,19 +81,77 @@ powercfg /hibernate off              # also removes Fast Startup
 `powercfg /hibernate off` is doing double duty here and that is deliberate: Fast Startup has no
 separate switch that survives a settings reset, and turning hibernation off removes both.
 
-The monitor is left alone. A blank screen costs nothing and the machine is a desktop the owner
-sits at.
+The monitor is left alone. A blank screen costs nothing.
 
-**Also turn off the network adapter's power saving**, which can drop the link on an idle machine
-and is invisible until a friend cannot connect at 3am:
+### The three that are specific to a laptop
+
+This host is a laptop, and the settings above were written for a desktop. Each of these ends the
+always-on premise on its own, and none of them looks like a fault afterwards.
+
+**Closing the lid suspends it.** The most likely way this server dies. It takes one absent-minded
+moment, and what you find later is a machine that is simply asleep:
 
 ```powershell
-Disable-NetAdapterPowerManagement -Name '<adapter name>'
+powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0   # 0 = do nothing
+powercfg /setactive SCHEME_CURRENT
 ```
 
-**In the BIOS**, set power-on after AC loss, as [`always-on-operation.md`](always-on-operation.md)
-already requires. That one is free, it is invisible until it matters, and it is not something
-Windows can do for you.
+Set only for AC. On battery, suspending on a closed lid is still the right behaviour.
+
+**On battery, none of the AC policy applies.** Windows keeps a separate DC policy, so an unplugged
+host sleeps on its own schedule regardless of everything above. **The machine has to stay plugged
+in.** That is a physical operating requirement, not a setting, and no script can enforce it.
+
+**Modern Standby may ignore the timeouts entirely.** Many laptops use S0 low-power idle rather than
+the older S3 sleep, and on those the classic settings do not reliably keep the machine awake. This
+is not knowable from documentation; read it off the hardware:
+
+```powershell
+powercfg /a
+```
+
+If the output says the system supports **Standby (S0 Low Power Idle)** and reports S3 as
+unavailable, this machine is Modern Standby and the timeout settings above are necessary but may
+not be sufficient. Test it: leave the machine untouched for an hour and confirm from another
+machine that the container is still answering.
+
+### The gain a laptop brings
+
+[`always-on-operation.md`](always-on-operation.md) lists an uninterruptible power supply as
+"optional, and the cheapest real upgrade available", because it turns most domestic power events
+into a non-event. **This host has one built in.** A power cut stops being an outage, which also
+makes the BIOS power-on-after-AC-loss setting that document asks for largely moot, and most
+laptops do not offer it anyway.
+
+Two things follow that a desktop owner never has to think about:
+
+- **Keep it plugged in**, per above. The UPS only works if the machine is on AC to begin with.
+- **Battery health is now operational.** A battery held at 100% on permanent AC degrades, and the
+  battery is the UPS. If the firmware offers a charge limit, typically 60 to 80 percent, set it.
+  If it does not, the UPS is on a clock and will quietly stop being one.
+
+### Wi-Fi, since that is the network path
+
+```powershell
+Disable-NetAdapterPowerManagement -Name '<Wi-Fi adapter name>'
+```
+
+**This stops being housekeeping and becomes mandatory on a machine nobody touches.** An adapter
+that idles down drops the link, and the symptom is a server that was reachable and now is not,
+with nothing in any log to explain it.
+
+Two more Wi-Fi consequences, both covered in [`networking.md`](networking.md):
+
+- **The DHCP reservation goes against the Wi-Fi adapter's MAC**, not the ethernet port's. A
+  reservation on the wrong interface does nothing, silently.
+- **Wi-Fi jitter and CPU saturation produce the same complaint.** Both show up as rubber-banding
+  rather than as a disconnection, so "it is laggy" now has two plausible causes and the first
+  question is which.
+
+**A cable is the single cheapest improvement available to this project.** It is a recommendation
+rather than a requirement: it removes a whole class of fault for the price of a cable. If the host
+ever moves to ethernet, the DHCP reservation and the forwarding rule both have to follow the new
+MAC address.
 
 ## 2. Windows Update: schedule the reboot, do not fight it
 
@@ -264,7 +330,19 @@ most at risk.
 
 **Measure rather than trust this table.** [`titles/valheim.md`](titles/valheim.md) is explicit that
 the published RAM figures are community consensus and that the only number that matters is your own
-world. If players report lag while RAM is plentiful, look at single-core saturation, not at memory.
+world. If players report lag while RAM is plentiful, look at single-core saturation **or at the
+Wi-Fi path**, which on this host produce the same symptom.
+
+**Thermals deserve a line of their own here, because this is a laptop.**
+[`always-on-operation.md`](always-on-operation.md) already notes that a machine idling at a desk
+for an hour a day behaves differently from one running a game simulation continuously for months.
+A laptop chassis has far less thermal headroom than the desktop that sentence was written about,
+and a laptop that thermally throttles does not crash: it gets slower, which arrives as
+rubber-banding, which is the third thing that produces that same complaint.
+
+Two cheap mitigations, in order of value: **do not run it on a soft surface**, where the intake is
+usually on the underside, and **cap the container cpus rather than letting the server take what it
+wants**, which is what the table above already does.
 
 ## 7. Where the state lives, and where it must not
 
@@ -305,6 +383,23 @@ against, so the test is the reboot, not the checklist.
 5. From another machine, or after the fact, confirm `docker ps` shows `reboot-probe` running, and
    note how long after power-on it came back.
 
+### And the second test, which this host needs and a desktop would not
+
+**Close the lid.** With the marker container running and the machine on AC:
+
+1. Close the lid and leave it for ten minutes.
+2. From another machine on the network, confirm the container is still answering.
+3. Open it again and check `docker ps`.
+
+This is a separate test because it is a separate failure, and on a laptop it is the **most likely**
+one: it needs no update, no power cut and no crash, just somebody tidying up. If the machine
+suspended, the lid action did not take, and nothing else in this document will save the server
+from it.
+
+While you are there, the same ten minutes answers the Modern Standby question from
+[section 1](#1-never-sleep-never-hibernate-no-fast-startup): leave the lid **open** and the machine
+untouched for an hour instead, and confirm the same thing.
+
 **Record the result below.** A number here is the difference between believing the host is
 always-on and knowing it.
 
@@ -313,6 +408,8 @@ always-on and knowing it.
 | Date | What was tested | Result | Time to recovery |
 |---|---|---|---|
 | *pending* | Unattended reboot, marker container | *pending* | *pending* |
+| *pending* | Lid closed ten minutes, on AC | *pending* | n/a |
+| *pending* | Untouched one hour, lid open (Modern Standby) | *pending* | n/a |
 
 The full-stack version of this test, with the real server rather than a marker container, is rung
 one of [the end-to-end verification](titles/valheim.md#verify-it-worked).
@@ -326,3 +423,6 @@ one of [the end-to-end verification](titles/valheim.md#verify-it-worked).
 | Mirrored mode carrying UDP from outside | Not vendor-documented either way. Ours is an observation | Re-run the proof in [`networking.md`](networking.md) |
 | The resource table | Guesses until measured, and the world grows | Your own world |
 | Windows 11 Home's update controls | Microsoft moves these between builds | Settings > Windows Update > Advanced options |
+| That the lid action holds | Power plans get reset by updates, driver installs and vendor utilities | Close the lid and check |
+| That the battery is still a UPS | Batteries degrade, and this one is held at charge continuously | Unplug it briefly and watch the estimate |
+| That the host is still on Wi-Fi | A cable is the cheapest improvement here, and taking it changes the MAC | `Get-NetAdapter`, and the router's DHCP reservation |

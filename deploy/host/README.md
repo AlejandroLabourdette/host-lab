@@ -4,6 +4,24 @@ Applies the Windows 11 host arrangement decided in
 [ADR 0007](../../docs/decisions/0007-host-on-windows-with-docker-desktop-and-wsl2.md) and described
 in [`docs/windows-host.md`](../../docs/windows-host.md).
 
+## Check it parses, first
+
+This script was written on a machine with no PowerShell on it, so it has never
+been parsed by the thing that will run it. **Parse it before you run it**, from
+any PowerShell prompt, elevated or not:
+
+```powershell
+$errors = $null
+[System.Management.Automation.Language.Parser]::ParseFile(
+    "$PWD\configure-host.ps1", [ref]$null, [ref]$errors) | Out-Null
+if ($errors) { $errors } else { "parses cleanly" }
+```
+
+This costs five seconds and it is the difference between finding a typo now and
+finding it halfway through configuring an elevated session. One quoting bug was
+already caught by hand during development, which is exactly the argument for
+not trusting the next one to be caught the same way.
+
 ## Run it
 
 From an **elevated** PowerShell prompt, on the host:

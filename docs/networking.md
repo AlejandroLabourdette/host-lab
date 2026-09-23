@@ -158,6 +158,12 @@ server that was reachable for a month and then was not. Fix this before creating
 - Preferred: a **DHCP reservation** on the router, tying the host's MAC address to a fixed lease.
   The host keeps using DHCP, and the router guarantees the answer. One place to change, and it
   survives reinstalling the host.
+  **Reserve against the interface the host actually uses.** A machine has one MAC per interface,
+  so a reservation made for the ethernet port does nothing while the host is on Wi-Fi, and it
+  fails silently: the lease is simply never claimed. This host is on Wi-Fi
+  ([`windows-host.md`](windows-host.md)), so the reservation goes against the **Wi-Fi** adapter's
+  MAC, and moving it to a cable later means redoing both the reservation and nothing else, which
+  is easy to forget precisely because everything else keeps working.
 - Alternative: a static address configured on the host, outside the router's DHCP pool. Works, but
   the knowledge now lives in two places that can disagree.
 
