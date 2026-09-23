@@ -19,6 +19,13 @@ corrects that against evidence, and [`docs/windows-host.md`](docs/windows-host.m
 in practice. [ADR 0008](docs/decisions/0008-implementation-stack-and-manifest-syntax.md) records
 the stack.
 
+**What is not yet true is written down**, in
+[`docs/commissioning.md`](docs/commissioning.md): the work that needs the host
+itself, in order, and the claims this repository has not earned yet. Chief among
+them, per
+[ADR 0003](docs/decisions/0003-back-up-world-saves-off-the-host.md): no backup
+has been restored, so no backup is accepted.
+
 The layout it is being built into, so the map exists before all of it does:
 
 | Where | What |

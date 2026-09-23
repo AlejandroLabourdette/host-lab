@@ -21,7 +21,8 @@ The documents are written to be read in this order. Each one assumes the ones ab
 | 6 | [`remote-control.md`](remote-control.md) | How do friends start, stop and check the server without the owner present? |
 | 7 | [`titles/valheim.md`](titles/valheim.md) | The first concrete case, end to end: bare machine to friends connected. |
 | 8 | [`windows-host.md`](windows-host.md) | The host is Windows, not Linux. What does that change, and what has to be configured so it survives a reboot nobody asked for? |
-| 9 | [`sources.md`](sources.md) | Where every claim came from, when it was true, and what to re-check when. |
+| 9 | [`commissioning.md`](commissioning.md) | What is left to do on the host, in order, and which claims have not been earned yet. |
+| 10 | [`sources.md`](sources.md) | Where every claim came from, when it was true, and what to re-check when. |
 
 Each document assumes the ones above it and can be read without the ones below. Cross-references
 do point forward where a later document holds the detail, but **never for a prerequisite**: a
