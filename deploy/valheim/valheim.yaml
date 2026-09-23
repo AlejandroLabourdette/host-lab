@@ -30,13 +30,18 @@ deployment:
   # valheim-server-docker #802. See ADR 0007 and docs/windows-host.md.
   state_volume: valheim-data
 
-  # The host is also the owner's gaming machine. Two cores for a largely
-  # single-threaded server is not waste: it leaves headroom for the autosave,
-  # which is the moment the server most needs not to be starved and the moment
-  # a world is most at risk. Measure and correct these; the table in
-  # docs/windows-host.md is a starting point, not a finding.
-  memory: 6g
-  cpus: 2
+  # Sized for the measured host: i7-13700H, 63.7 GB RAM, 20 threads.
+  #
+  # These caps exist to stop the server from competing with the game, not to
+  # ration anything: there is plenty of both. Four cores for a largely
+  # single-threaded server leaves headroom for the autosave, which is the
+  # moment the server most needs not to be starved and the moment a world is
+  # most at risk.
+  #
+  # Measure and correct. docs/windows-host.md has the reasoning, and the only
+  # number that matters is your own world.
+  memory: 8g
+  cpus: 4
 
   restart: unless-stopped
 

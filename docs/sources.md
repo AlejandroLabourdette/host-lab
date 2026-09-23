@@ -91,6 +91,8 @@ because the method is written down and the test is re-runnable.
 | **`docker stop` delivers SIGINT to the server as PID 1**, which exits 0 in 0.28 s having written to its state volume as the unprivileged user | 2026-09-22 | [`images/valheim/README.md`](../images/valheim/README.md) | `uv run pytest tests/test_image_signals.py` |
 | **SteamCMD's 32-bit client crashes under x86-64 emulation on Apple Silicon**, so this image must be built on an x86-64 machine. Other 32-bit binaries in the same package do run, so it is SteamCMD specifically | 2026-09-22 | [`images/valheim/README.md`](../images/valheim/README.md) | `docker build --platform linux/amd64 images/valheim` on arm64 |
 | The host returns from an unattended reboot with nobody logged in | *pending* | [`windows-host.md`](windows-host.md) | The acceptance test in that document |
+| **The host supports S3 sleep and NOT S0 Low Power Idle**, so it is not a Modern Standby machine and the classic timeout settings do control it | 2026-09-23 | [`windows-host.md`](windows-host.md) | `powercfg /a` |
+| **The Wi-Fi link rate is 130 Mbps**, which is 802.11n on 2.4 GHz, on a shared building network | 2026-09-23 | [`windows-host.md`](windows-host.md) | `Get-NetAdapter` |
 
 The first row is worth keeping because it corrected a design error rather than confirming one. An
 earlier draft of `udpecho` used the observed source address to tell a genuine external request from

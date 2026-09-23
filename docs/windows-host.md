@@ -16,16 +16,31 @@ still correct. This document covers the layer underneath it, which that document
 Filled in from the machine itself. Values that are not yet measured are marked, rather than
 guessed, because this is exactly the kind of table that rots into fiction.
 
+Measured 2026-09-23.
+
 | | |
 |---|---|
-| Windows edition | Windows 11 Home |
-| Windows version | *pending: `winver`. Mirrored networking requires 22H2 or higher* |
-| Form factor | **Laptop** (confirmed 2026-09-23). See [section 1](#1-never-sleep-never-hibernate-no-fast-startup) |
-| CPU | *pending* |
-| RAM | *pending* |
-| Network | **Wi-Fi** (confirmed 2026-09-23) |
-| Sleep states supported | *pending: `powercfg /a`. Decides whether the classic settings are enough* |
+| Windows edition | Windows 11 **Home** |
+| Windows version | **25H2**, build 26200.9457. Comfortably above the 22H2 that mirrored networking needs |
+| Form factor | **Laptop**. See [section 1](#1-never-sleep-never-hibernate-no-fast-startup) |
+| CPU | Intel Core i7-13700H, 14 cores / 20 threads |
+| RAM | **63.7 GB** |
+| Network | **Wi-Fi**, adapter named `Wi-Fi 2`, MAC `6C-F6-DA-87-ED-99` |
+| Link rate observed | **130 Mbps**, which is 802.11n on **2.4 GHz**. See [section 1](#wi-fi-since-that-is-the-network-path) |
+| Sleep states | **S3 available. S0 Low Power Idle unsupported by the firmware** |
+| WSL | 2.6.3.0, kernel 6.6.87.2 |
+| Docker | **Not installed yet** |
 | Also used for | Daily desktop work and playing games, including Valheim |
+
+Three of those settle questions this document was written not to assume:
+
+- **25H2** means mirrored networking exists, so the arrangement in
+  [ADR 0007](decisions/0007-host-on-windows-with-docker-desktop-and-wsl2.md) holds.
+- **No S0 Low Power Idle** means this is a classic-sleep machine and the timeouts in section 1
+  really do control it. The opposite answer would have left the always-on premise resting on
+  nothing.
+- **63.7 GB** means the resource limits in [section 6](#6-resource-limits-on-a-machine-that-is-also-a-gaming-pc)
+  stop being a negotiation. There is enough for the server and the game at once with room spare.
 
 **It being a laptop is not a detail.** A laptop is a machine designed to stop running when nobody
 is using it, and three of its defaults each end the always-on premise on their own. It also brings
@@ -112,8 +127,12 @@ powercfg /a
 
 If the output says the system supports **Standby (S0 Low Power Idle)** and reports S3 as
 unavailable, this machine is Modern Standby and the timeout settings above are necessary but may
-not be sufficient. Test it: leave the machine untouched for an hour and confirm from another
-machine that the container is still answering.
+not be sufficient.
+
+**On this host, read 2026-09-23, the answer is the favourable one.** S3 is available and S0 Low
+Power Idle is explicitly unsupported by the firmware, so the timeout settings do control it. The
+hour-long test below is still worth running once, because a setting that is correct and a machine
+that stays awake are different claims, but it is confirmation rather than a gate.
 
 ### The gain a laptop brings
 
@@ -133,8 +152,26 @@ Two things follow that a desktop owner never has to think about:
 ### Wi-Fi, since that is the network path
 
 ```powershell
-Disable-NetAdapterPowerManagement -Name '<Wi-Fi adapter name>'
+Disable-NetAdapterPowerManagement -Name 'Wi-Fi 2'
 ```
+
+The adapter is named `Wi-Fi 2` on this host, with a space, so it has to be quoted.
+
+### The band, which is the finding worth acting on
+
+The adapter reported a link rate of **130 Mbps**. That is precisely the 802.11n rate for a
+two-stream 40 MHz channel on **2.4 GHz**, which is the congested band, on a shared building
+network where the congestion is other people's.
+
+Bandwidth is not the concern: Valheim's per-player traffic is small and 130 Mbps is far more than
+this needs. **Jitter is.** Valheim sends world state over UDP with no retransmission underneath
+it, so variance in delivery arrives in the game as rubber-banding rather than as a disconnection,
+and that is now the third thing that produces that same symptom alongside single-core saturation
+and thermal throttling.
+
+**If the access point offers 5 GHz, moving to it is free and is the largest improvement available
+short of a cable.** 5 GHz is less congested, and on a shared network that matters more than usual
+because the interference is not yours to turn off.
 
 **This stops being housekeeping and becomes mandatory on a machine nobody touches.** An adapter
 that idles down drops the link, and the symptom is a server that was reachable and now is not,
@@ -323,10 +360,22 @@ measured and then corrected:
 |---|---|---|---|
 | 16 GB | `6GB` | `4` | `--memory 5g --cpus 2` |
 | 32 GB | `10GB` | `4` | `--memory 8g --cpus 2` |
+| **63.7 GB (this host)** | **`12GB`** | **`8`** | **`--memory 8g --cpus 4`** |
 
-Two cores for a largely single-threaded server is not waste: it leaves headroom for the autosave,
+**On this host these numbers are not a negotiation.** With 63.7 GB and 20 threads there is enough
+for the server and the game at once with a lot spare, so the caps exist to stop WSL 2 from
+helping itself rather than to ration anything. Left alone, WSL 2 claims half the machine's memory
+by default, which here would be about 32 GB taken from a machine that is also somebody's desktop.
+
+Four cores for a largely single-threaded server is not waste: it leaves headroom for the autosave,
 which is the moment the server most needs not to be starved, and which is the moment a world is
 most at risk.
+
+**One nuance this CPU introduces.** The i7-13700H is a hybrid design, six performance cores and
+eight efficient ones. Valheim's simulation wants a performance core, and neither WSL 2 nor Docker
+can ask for one by name: the Windows scheduler decides. This is not worth engineering around in
+advance, but it is worth knowing as a lever if players report lag while every other number looks
+healthy.
 
 **Measure rather than trust this table.** [`titles/valheim.md`](titles/valheim.md) is explicit that
 the published RAM figures are community consensus and that the only number that matters is your own

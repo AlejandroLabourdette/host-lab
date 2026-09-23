@@ -134,6 +134,11 @@ older S3 sleep, and on those the classic timeout settings do not reliably keep t
 Whether this one does is not knowable from documentation: `powercfg /a` reports which sleep states
 the hardware actually supports, and that has to be read rather than assumed.
 
+**Read, and the answer is favourable.** On 2026-09-23 this host reported S3 available and
+**S0 Low Power Idle explicitly unsupported by the firmware**. So it is a classic-sleep machine and
+the timeout settings above do control it. This is recorded because it closes a real uncertainty,
+and because the opposite answer would have meant the always-on premise rested on nothing.
+
 **The one thing a laptop gives back is real, and ADR 0001 wanted it.** That document lists an
 uninterruptible power supply as "optional, and the cheapest real upgrade available", because it
 turns most domestic power events into a non-event. **A laptop has one built in.** A power cut
@@ -192,21 +197,36 @@ started at boot by a Task Scheduler task running as SYSTEM.
   pattern rather than a supported product feature, so it is ours to keep working. Port publishing
   then depends on mirrored networking and the Hyper-V firewall rule rather than on Docker Desktop's
   proxy, which is a different unproven path, not a safer one.
-- **Verdict:** the strongest technical option available on Home, and it is recorded as the
-  **documented fallback**.
+- **Its main cost disappeared on 2026-09-23.** Port publishing was its weak point, because it
+  would depend on mirrored networking and the Hyper-V firewall rather than on Docker Desktop's
+  proxy. ADR 0009 removed the need for any inbound path, so that objection no longer applies.
+- **Verdict:** the strongest technical option available on Home, **re-offered on 2026-09-23 with
+  its cost corrected and declined**. It remains the **documented fallback**, and the case for it is
+  now stronger than when it was first written: taking it would remove the auto-logon credential
+  entirely.
 
 ### C. Docker Desktop with the WSL2 backend, mirrored networking (chosen)
 
-- **For:** it is the arrangement the owner already runs and already understands, which matters on a
-  machine they use daily for something else. Docker Desktop handles port publishing itself, so the
-  UDP question has one answer to test rather than a chain of them. Docker Desktop is free for
-  personal use.
+- **For:** a supported product with a graphical interface, rather than a boot arrangement of our
+  own construction. Its published-port proxy is one mechanism to reason about rather than a chain
+  of them, which keeps direct LAN access simple if it is ever wanted.
+- **Corrected 2026-09-23.** This option was first argued on the grounds that it was "the
+  arrangement the owner already runs and already understands". **That was false**: Docker is not
+  installed on the host at all. The second supporting argument, that its proxy gives the UDP
+  question a single answer to test, was made moot the same week by
+  [ADR 0009](0009-reach-the-server-without-a-router-we-control.md), which chose a relay and
+  removed the need for any inbound path. Both reasons for preferring this over option B were
+  therefore gone.
+  **The choice was put again on that corrected basis and this option was re-affirmed by the
+  owner.** It is recorded this way rather than quietly re-justified, because a decision made twice
+  on good information is worth more than one that looks like it was never questioned.
 - **Against:** it requires a logged-on session, so **Windows auto-logon is a hard prerequisite**,
   and auto-logon stores the account password in LSA secrets where any local administrator can
   retrieve it. On a personal machine that is a bounded cost, but it is a real one and it is the
   price of this option. Mitigated, not removed, by a scheduled task that locks the workstation
   immediately after the automatic logon, so the machine is never left sitting unlocked.
-- **Verdict:** chosen by the owner, with the cost accepted knowingly.
+- **Verdict:** chosen by the owner, with the cost accepted knowingly, and chosen again once the
+  argument for it had been corrected.
 
 ### D. Run `valheim_server.exe` natively on Windows
 

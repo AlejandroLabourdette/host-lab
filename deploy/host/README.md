@@ -27,12 +27,15 @@ not trusting the next one to be caught the same way.
 From an **elevated** PowerShell prompt, on the host:
 
 ```powershell
-.\configure-host.ps1 -WslMemory 8GB -WslProcessors 4 -NetAdapter Ethernet
+.\configure-host.ps1 -WslMemory 12GB -WslProcessors 8 -NetAdapter 'Wi-Fi 2'
 ```
 
-Pick the numbers from the sizing table in
-[`docs/windows-host.md`](../../docs/windows-host.md#6-resource-limits-on-a-machine-that-is-also-a-gaming-pc),
-then measure your own world and correct them.
+Those are the values measured for this host: 63.7 GB of RAM, 20 threads, and an adapter named
+`Wi-Fi 2`, which has a space in it and therefore has to be quoted. The reasoning and the general
+table are in
+[`docs/windows-host.md`](../../docs/windows-host.md#6-resource-limits-on-a-machine-that-is-also-a-gaming-pc).
+
+`Get-NetAdapter` lists the adapters if the name ever changes.
 
 The script is re-runnable and reports what it found before changing anything. `-WhatIf` shows what
 it would do without doing it.

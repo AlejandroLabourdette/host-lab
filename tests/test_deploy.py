@@ -114,8 +114,8 @@ def test_resource_limits_use_keys_that_work_outside_swarm() -> None:
     machine that is also somebody's gaming PC. A limit that silently does
     nothing is worse than no limit, because it is believed."""
     service = composed()["services"]["valheim"]
-    assert service["mem_limit"] == "6g"
-    assert service["cpus"] == 2.0
+    assert service["mem_limit"] == "8g"
+    assert service["cpus"] == 4.0
     assert "deploy" not in service
 
 
