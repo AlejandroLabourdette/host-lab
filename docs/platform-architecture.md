@@ -27,7 +27,7 @@ implementation is a later ticket. The output here is a boundary and a contract, 
 ## The evidence
 
 Five titles: Valheim in depth because it is the first case, and four the group might plausibly
-play next. Sources and dates are in `sources.md`; the per-title facts below were
+play next. Sources and dates are in [`sources.md`](sources.md); the per-title facts below were
 accessed 2026-09-22 and are from a mix of official wikis and community documentation, which is
 flagged where it matters.
 
