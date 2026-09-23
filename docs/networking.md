@@ -347,24 +347,53 @@ Everything above is the general case. This section is the particular one, and it
 future reader needs: which branch of [ADR 0002](decisions/0002-reach-the-server-from-the-internet.md)
 this connection selected, and what was proven rather than assumed.
 
-### The diagnosis
-
-Per [step 1](#step-1-find-out-what-connection-you-actually-have), which is not optional and comes
-before any router configuration.
+### The diagnosis, and why it stopped being the deciding question
 
 | | |
 |---|---|
-| Date | *pending* |
-| Router WAN address | *pending* |
-| Observed public address (`curl -4 https://ifconfig.co`) | *pending* |
-| Working IPv6 (`curl -6 https://ifconfig.co`) | *pending* |
-| Verdict | *pending: public static, public dynamic, CGNAT, double NAT, or IPv6-only* |
-| ADR 0002 branch selected | *pending* |
+| Date | 2026-09-23 |
+| Observed public address | Ordinary public space, **not** in `100.64.0.0/10` |
+| Router WAN address | **Unobtainable.** The router is not ours |
+| Verdict | **The network is shared and not under the owner's control** |
+| Branch selected | Neither of ADR 0002's. See [ADR 0009](decisions/0009-reach-the-server-without-a-router-we-control.md) |
 
-**The group's platforms are known, and they settle the upstream question.** Every player is on
-Steam; nobody is on console or Game Pass. So `-crossplay` is **not mandatory**, branch 2 does not
-apply, and the Steam-native backend with direct UDP is available if the connection allows it.
-Crossplay remains the escape hatch if it does not, at the cost of the rotating join code.
+**The group's platforms are known.** Every player is on Steam; nobody is on console or Game Pass.
+So branch 2 does not apply: `-crossplay` was not mandatory on those grounds.
+
+**It became mandatory on different grounds.** The host is a laptop on a **shared building
+network**. There is no administration access to the router, there will not be, and the "ask the
+ISP" move at the head of ADR 0002's escalation order is not a conversation that exists here.
+
+That matters more than the CGNAT question, and the distinction is worth keeping straight because
+it is easy to conflate the two and reason wrongly from there:
+
+- **CGNAT is a property of the connection.** It makes port forwarding *impossible*.
+- **A router that is not yours is a property of the situation.** It makes port forwarding
+  *unavailable*.
+
+Both land in the same place. So **branch 3, the recommended direct-UDP path, is off the table
+whether or not there is CGNAT**, and the CGNAT diagnosis is no longer an input to the decision. It
+is recorded here because it would matter again if the host ever moved to a network the owner
+controls, and for that reason alone.
+
+**The traceroute test is the one worth running without router access**, if the answer is ever
+wanted: `tracert -d -h 6 8.8.8.8`, where a second hop inside `100.64.0.0/10` is conclusive CGNAT.
+Nothing currently waits on it.
+
+### What this deployment does instead
+
+[ADR 0009](decisions/0009-reach-the-server-without-a-router-we-control.md) selects **`-crossplay`**,
+Valheim's own relay. The server dials out to PlayFab and players join with a numeric code, so
+nothing inbound is ever required and no router is ever touched.
+
+**Everything in [step 2](#step-2-port-forwarding-when-it-can-work) and
+[step 3](#step-3-dynamic-dns-when-the-address-moves) below therefore does not apply to this
+deployment.** Both stay in the document because they are correct, and because a reader who does
+control their router should follow them.
+
+What replaces them is a control-plane obligation rather than a networking one: **the join code
+regenerates on every server restart**, so it has to be published automatically. See
+[`remote-control.md`](remote-control.md).
 
 ### The extra layer this host adds
 
@@ -431,22 +460,28 @@ Stop the container before starting the game. Both want UDP 2456.
 
 ### Result
 
+**Superseded by [ADR 0009](decisions/0009-reach-the-server-without-a-router-we-control.md).** With
+the relay chosen, nothing inbound is required and there is no external UDP path left to prove, so
+this probe is no longer a gate on anything.
+
+`tools/udpecho` keeps its value as a **LAN diagnostic**. When the server stops working, "is
+anything listening at all on this host" is still the first question, and it is still the only way
+to answer it that ADR 0002 would accept as evidence.
+
 | | |
 |---|---|
-| Date | *pending* |
-| Probe from | *pending: which network, which device* |
-| Result | *pending: PASS, PARTIAL or FAIL* |
-| Source address seen by the server | *pending. Diagnostic only: Docker Desktop's proxy rewrites it* |
+| Date | 2026-09-23 |
+| Outcome | Not run. No inbound path is used |
 
-**If this fails, it is a finding about the design and not a bug to work around.** The order to try,
-which follows ADR 0007 and then ADR 0002 rather than being invented here:
+**This was written as a gate and never became one.** The escalation it describes was overtaken by
+ADR 0009, which went to its step 2 directly and for a different reason: not that the UDP path
+failed, but that there was never a router to forward through. The ladder is kept because it is the
+right order if the host ever moves to a network the owner controls.
 
 1. Docker Engine inside the WSL 2 distribution, without Docker Desktop, so the published port is
    not behind Docker Desktop's proxy.
 2. `-crossplay`, which removes the port-forwarding requirement entirely and relays through PlayFab.
-   It costs one flag and no infrastructure, and it makes stage 1 of the control plane mandatory
-   rather than optional, because the join code rotates on every restart
-   ([ADR 0006](decisions/0006-give-friends-a-control-plane.md) consequence 1).
+   **This is what was chosen.**
 3. The escape hatches in [when port forwarding cannot work](#when-port-forwarding-cannot-work),
    in the order ADR 0002 sets.
 

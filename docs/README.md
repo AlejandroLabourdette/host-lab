@@ -52,6 +52,7 @@ without destroying the record of why the shape is what it is.
 | [0006](decisions/0006-give-friends-a-control-plane.md) | Give friends a control plane, starting with read-only status | Accepted |
 | [0007](decisions/0007-host-on-windows-with-docker-desktop-and-wsl2.md) | Host on Windows 11 Home, with the Linux layer in Docker Desktop and WSL2 | Accepted |
 | [0008](decisions/0008-implementation-stack-and-manifest-syntax.md) | Implementation stack and manifest syntax | Accepted |
+| [0009](decisions/0009-reach-the-server-without-a-router-we-control.md) | Reach the server without a router we control | Accepted |
 
 ## Layout, and why it is this way
 

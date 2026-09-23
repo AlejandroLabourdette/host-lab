@@ -2,6 +2,9 @@
 
 > Status: accepted
 > Date: 2026-09-22
+> Amended by [0009](0009-reach-the-server-without-a-router-we-control.md): the router is
+> not ours, which removes branch 3 whatever the connection type. The procedure stands; the
+> branch needed a condition this record did not contemplate.
 
 ## Context
 
