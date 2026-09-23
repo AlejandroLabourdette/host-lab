@@ -14,6 +14,7 @@ The documents are written to be read in this order. Each one assumes the ones ab
 | # | Document | Answers |
 |---|---|---|
 | 1 | [`scope-and-goals.md`](scope-and-goals.md) | What are we building, for whom, and what is explicitly not in scope? |
+| 2 | [`networking.md`](networking.md) | How do friends on the internet reach a server sitting behind a household router? |
 
 More documents are added to this table as they are written. The set is not complete yet.
 
@@ -31,6 +32,7 @@ without destroying the record of why the shape is what it is.
 | ADR | Decision | Status |
 |---|---|---|
 | [0001](decisions/0001-host-on-an-owned-always-on-x86-machine.md) | Host on an owned, always-on x86 machine | Accepted |
+| [0002](decisions/0002-reach-the-server-from-the-internet.md) | Reach the server from the internet: diagnose, then branch | Accepted |
 
 ## Layout, and why it is this way
 
