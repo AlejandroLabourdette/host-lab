@@ -88,7 +88,8 @@ When a 1.0 server first opens a world saved by an older version, **it converts i
 directory format, and the conversion is one-way.** A pre-1.0 server cannot read the world
 afterwards.
 
-Source: [lloesche/valheim-server](https://github.com/lloesche/valheim-server-docker) project README:
+Source: [valheim-server-docker](https://github.com/community-valheim-tools/valheim-server-docker)
+project README:
 "The first time a 1.0 server opens a world saved by an older version it converts it to the new
 directory format. As with every Valheim world version upgrade this is one-way" (accessed
 2026-09-22).
@@ -107,7 +108,7 @@ The rule this produces:
 
 This applies beyond Valheim and beyond 1.0. Format migrations are the highest-risk routine event in
 a game server's life, they are triggered automatically by an update, and they are irreversible. See
-`always-on-operation.md` for how this constrains the update procedure.
+[`always-on-operation.md`](always-on-operation.md) for how this constrains the update procedure.
 
 ## The game's own backups, and why they are not enough
 

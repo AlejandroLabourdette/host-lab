@@ -48,7 +48,7 @@ a reason to configure SIGINT deliberately rather than to rely on SIGTERM working
 - **Docker sends SIGTERM and waits 10 seconds**, then SIGKILL. Both halves are wrong here: the
   wrong signal, and a timeout shorter than a large world takes to write. The reference container
   runs with `--stop-timeout 120` for exactly this reason
-  ([lloesche/valheim-server](https://github.com/lloesche/valheim-server-docker), accessed
+  ([valheim-server-docker](https://github.com/community-valheim-tools/valheim-server-docker), accessed
   2026-09-22).
 - **systemd sends SIGTERM and waits 90 seconds**, then SIGKILL. Better on the timeout, still the
   wrong signal.
@@ -112,7 +112,8 @@ Each server is an image with a declared state volume and a restart policy.
   Resource limits and log handling are built in. Persistent state is forced to be explicit, because
   anything not on a volume is gone on the next image pull, which is a *useful* constraint for a
   project whose whole purpose is not losing persistent state. The per-title shape is close to
-  identical, which is exactly the abstraction `platform-architecture.md` needs.
+  identical, which is exactly the abstraction
+  [`platform-architecture.md`](platform-architecture.md) needs.
 - **Against:** a real layer of indirection, and it is where the footguns live. Publishing a port
   without `/udp` gives you TCP and a silently dead server. A bind mount pointing at the wrong path
   produces an empty world. File ownership between host and container is a recurring source of

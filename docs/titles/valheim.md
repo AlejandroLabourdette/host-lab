@@ -21,7 +21,7 @@ including this document.
 | Steam app ID | `896660` (dedicated server, separate from the `892970` game client) |
 | Steam login | `anonymous`. No account, no game ownership needed on the host |
 | Binary | `valheim_server.x86_64` (Linux), `valheim_server.exe` (Windows) |
-| Ports | **UDP 2456** game, **UDP 2457** query |
+| Ports | **UDP 2456** game, **UDP 2457** query, **UDP 2458** under crossplay |
 | Remote admin | **None.** No RCON, no console socket |
 | Graceful stop | **SIGINT** |
 | Config | Command-line flags only |
@@ -225,6 +225,7 @@ Full analysis in [`networking.md`](../networking.md) and
 |---|---|---|---|
 | 2456 | **UDP** | Gameplay | Yes |
 | 2457 | **UDP** | Steam query and A2S, server browser listing | **Yes, always** |
+| 2458 | UDP | Associated with the crossplay backend | Optional. Crossplay is relayed and needs no forwarding |
 | random high | TCP | Steamworks internal | **Never** |
 
 Three rules that are not obvious:
@@ -407,29 +408,20 @@ world. Step 4 is the only way back.
 
 ## Valheim against the platform contract
 
-The validation for [`platform-architecture.md`](../platform-architecture.md). If the generic
-contract cannot express the title it was designed around, the contract is wrong.
+Valheim's filled-in manifest lives in
+**[`platform-architecture.md`, "Valheim against the contract"](../platform-architecture.md#valheim-against-the-contract)**,
+next to the contract it validates. It is deliberately not duplicated here: it is meant to be the
+single declarative description of the title, and two copies drift, which they already had begun to
+do. Everything in it is drawn from the sections above.
 
-| Field | Valheim |
-|---|---|
-| `acquire` | SteamCMD, anonymous, app `896660`, `validate` |
-| `runtime` | glibc 2.29+, libstdc++ 3.4.26+, `libatomic1`, `libpulse-dev`, `libpulse0` |
-| `preconditions` | None |
-| `config` | Command-line flags only |
-| `config_hazards` | **`start_server.sh`, overwritten on every update** |
-| `state_dir` | `-savedir`: `worlds_local/<World>/` plus the three list files |
-| `state_consistency` | Newest `_main.N.*` generation with a matching `.ok` |
-| `ports` | UDP 2456 game, UDP 2457 query, remapping **not** permitted |
-| `stop` | **SIGINT**, generous timeout |
-| `health` | Liveness: A2S on 2457. Durability: generation and `.ok` advancing |
-| `admin` | **None** |
-| `players` | Platform IDs in three list files; non-empty `permittedlist.txt` excludes everyone else |
-| `reachability` | `-crossplay` uses the PlayFab relay |
+If the generic contract could not express the title it was designed around, the contract would be
+wrong. Every field is expressible, and the two that come out empty - `preconditions` and `admin` -
+are empty for real reasons rather than for lack of room.
 
-Every field is expressible. The two empty ones are empty for real reasons, not for lack of room.
-Two fields in this table exist *because* of Valheim: `config_hazards`, from the `start_server.sh`
-trap, and `state_consistency`, from the `.ok` marker. The title drove the contract rather than
-being retrofitted to it, which is what makes this a validation rather than a coincidence.
+Two of the contract's fields exist *because* of Valheim: `config_hazards`, from the
+`start_server.sh` trap, and `state_consistency`, from the `.ok` marker. The title drove the
+contract rather than being retrofitted to it, which is what makes this a validation rather than a
+coincidence.
 
 ## What in this document will rot first
 

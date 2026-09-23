@@ -53,7 +53,8 @@ single most useful diagnostic signal in this document, and it is why the
 [symptom table](#symptom-table) is organised around it.
 
 **About port 2458.** Guides routinely say to forward 2456-2458, and the widely used
-[lloesche/valheim-server](https://github.com/lloesche/valheim-server-docker) container exposes UDP
+[valheim-server-docker](https://github.com/community-valheim-tools/valheim-server-docker)
+container exposes UDP
 2458 when crossplay is enabled (project README, accessed 2026-09-22). Iron Gate's own guide
 documents only the port and port+1. In practice this rarely matters: 2458 is associated with the
 crossplay backend, and the crossplay backend is precisely the one that does not need port

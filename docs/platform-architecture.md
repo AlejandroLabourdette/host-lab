@@ -174,7 +174,7 @@ The validation. If the contract cannot express the title we are actually buildin
 | `config_hazards` | **`start_server.sh` is overwritten on every Steam update.** Never put config there |
 | `state_dir` | `-savedir`, containing `worlds_local/<World>/` plus `adminlist.txt`, `permittedlist.txt`, `bannedlist.txt` |
 | `state_consistency` | Newest `_main.N.*` generation with a matching `.ok` marker |
-| `ports` | UDP 2456 game, UDP 2457 query. **External and internal must match** |
+| `ports` | UDP 2456 game, UDP 2457 query, UDP 2458 under crossplay (needs no forwarding). **External and internal must match** |
 | `stop` | **SIGINT**, with a generous timeout. SIGTERM unreliable, SIGKILL loses up to `-saveinterval` |
 | `health` | Liveness: A2S query on 2457. **Durability: generation number and `.ok` timestamp advancing** |
 | `admin` | **None.** No RCON, no console socket |
