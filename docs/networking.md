@@ -361,7 +361,7 @@ months, knowing which rung used to pass is worth more than any amount of re-read
 | Worked for weeks, then stopped, no changes made | The public address changed (no dynamic DNS, or the updater is broken), or the host's DHCP lease moved and the forwarding rule now points at nothing |
 | Works on the LAN, never from outside | Router rule missing or wrong, or CGNAT. Re-run [step 1](#step-1-find-out-what-connection-you-actually-have) |
 | Nothing works, WAN address starts with `100.` | CGNAT. Port forwarding cannot work. Pick an escape hatch |
-| Connects, then drops after a few minutes | Not a forwarding problem. Suspect the relay if on crossplay, upstream bandwidth saturation, or the server process dying - check `always-on-operation.md` |
+| Connects, then drops after a few minutes | Not a forwarding problem. Suspect the relay if on crossplay, upstream bandwidth saturation, or the server process dying - check [`always-on-operation.md`](always-on-operation.md) |
 | Steam friends connect, console friend cannot | `-crossplay` is not enabled. No amount of port forwarding fixes this |
 | Everything is open but the server still does not list | `-public 0`, or the server has not finished its first heartbeat. Listing is not instant |
 
