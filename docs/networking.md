@@ -376,7 +376,7 @@ connection. The realistic risk is not the game but contention: a large upload, a
 to off-site storage, or someone's video call sharing the same upstream will show up as lag spikes
 for every player at once. This is worth knowing before blaming the game. Scheduling the off-site
 backup for a time nobody plays is the cheapest mitigation and costs nothing to arrange - see
-`save-data-and-backups.md`.
+[`save-data-and-backups.md`](save-data-and-backups.md).
 
 ## Security notes
 
