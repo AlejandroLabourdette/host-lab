@@ -19,6 +19,7 @@ The documents are written to be read in this order. Each one assumes the ones ab
 | 4 | [`always-on-operation.md`](always-on-operation.md) | What keeps the machine, the process and the world alive without anyone watching? |
 | 5 | [`platform-architecture.md`](platform-architecture.md) | What is shared across games, what is specific to one, and where does the boundary go? |
 | 6 | [`remote-control.md`](remote-control.md) | How do friends start, stop and check the server without the owner present? |
+| 7 | [`titles/valheim.md`](titles/valheim.md) | The first concrete case, end to end: bare machine to friends connected. |
 
 More documents are added to this table as they are written. The set is not complete yet.
 

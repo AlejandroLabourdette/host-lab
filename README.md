@@ -17,3 +17,7 @@ implementation that follows is a transcription rather than an improvisation.
 
 [`docs/README.md`](docs/README.md) is the index. It carries the reading order, the layout and the
 writing conventions every document in this repository follows.
+
+If you want the concrete thing rather than the design, go straight to
+[`docs/titles/valheim.md`](docs/titles/valheim.md), which runs from a bare Linux machine to friends
+connected, including the networking.
