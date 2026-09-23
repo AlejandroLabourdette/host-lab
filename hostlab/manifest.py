@@ -471,6 +471,86 @@ class PlayerLists(BaseModel):
         return self
 
 
+def _pattern_without_the_code_group(pattern: str) -> str | None:
+    """The literal text around `(?P<code>...)`, or None if it is not literal.
+
+    Used to construct the line a server writes when the code does not exist
+    yet, so a pattern that would accept it can be refused at load time rather
+    than discovered by a friend who cannot connect.
+    """
+    opening = pattern.find("(?P<code>")
+    if opening == -1:
+        return None
+
+    depth = 0
+    for index in range(opening, len(pattern)):
+        if pattern[index] == "(" and (index == opening or pattern[index - 1] != "\\"):
+            depth += 1
+        elif pattern[index] == ")" and pattern[index - 1] != "\\":
+            depth -= 1
+            if depth == 0:
+                remainder = pattern[:opening] + pattern[index + 1 :]
+                # Only meaningful when what is left is plain text.
+                if re.search(r"[\\\[\]{}()*+?|^$]", remainder):
+                    return None
+                return remainder
+    return None
+
+
+class JoinCode(BaseModel):
+    """How to find the code players need, for a relay that issues one.
+
+    Valheim has no administration channel, so the server's log is the only
+    place this appears. That couples the platform to a game's log format, which
+    is the coupling `always-on-operation.md` warns about. It is accepted
+    because there is no other source, and contained by living here as data: a
+    log format change is a manifest edit, not a code change.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    source: Literal["container_log"]
+    pattern: str = Field(
+        description="Regex with a named group 'code', matched against the log stream"
+    )
+    evidence: Evidence
+
+    @model_validator(mode="after")
+    def _pattern_captures_a_code(self) -> JoinCode:
+        try:
+            compiled = re.compile(self.pattern)
+        except re.error as error:
+            msg = f"join code pattern is not a valid regex: {error}"
+            raise ValueError(msg) from error
+
+        if "code" not in compiled.groupindex:
+            msg = "join code pattern must contain a named group (?P<code>...)"
+            raise ValueError(msg)
+
+        # The pattern has to require content, not merely locate the phrase.
+        # Valheim announces the session BEFORE the lobby exists, so a line goes
+        # out with nothing where the code should be, and a lenient pattern
+        # captures "" from it and publishes that with great confidence. The
+        # failure then looks like the server being fine.
+        #
+        # Checked by building the line that would carry an absent code: take
+        # the pattern and delete the capture group, leaving its literal
+        # surroundings. If the pattern still matches that, it accepts a code
+        # that is not there. When the surroundings are not literal the probe
+        # simply will not match, and the check declines to guess.
+        probe = _pattern_without_the_code_group(self.pattern)
+        if probe is not None:
+            found = compiled.search(probe)
+            if found is not None and found.group("code") == "":
+                msg = (
+                    f"join code pattern captures an empty code from {probe!r}, "
+                    "which is the line a server writes before the code exists"
+                )
+                raise ValueError(msg)
+
+        return self
+
+
 class Relay(BaseModel):
     """A title's own relay, if it ships one."""
 
@@ -480,7 +560,22 @@ class Relay(BaseModel):
     enabled_by: str = Field(description="Name of the bool setting that turns it on")
     removes_port_forwarding: bool
     rotates_join_code_on_restart: bool
+    join_code: JoinCode | None = None
     evidence: Evidence
+
+    @model_validator(mode="after")
+    def _a_rotating_code_must_be_findable(self) -> Relay:
+        # A relay whose code changes on every restart, with no way to read the
+        # new one, silently locks out everyone who was not watching. ADR 0006
+        # consequence 1 makes publishing it an obligation rather than a
+        # feature, so the manifest must say where it comes from.
+        if self.rotates_join_code_on_restart and self.join_code is None:
+            msg = (
+                f"relay {self.name!r} rotates its join code on every restart but "
+                "declares no join_code source, so nothing could publish the new one"
+            )
+            raise ValueError(msg)
+        return self
 
 
 class Reachability(BaseModel):

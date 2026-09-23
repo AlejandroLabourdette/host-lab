@@ -8,8 +8,9 @@ which starts, looks correct, and is wrong.
 from __future__ import annotations
 
 import copy
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any
 
 import pytest
 
@@ -24,10 +25,6 @@ GOOD_SETTINGS: dict[str, Any] = {
     "world_name": "Midgard",
     "password": "ravenstone",
 }
-
-
-class WriteManifest(Protocol):
-    def __call__(self, raw: dict[str, Any], name: str = ...) -> Path: ...
 
 
 def deployment(**overrides: Any) -> Deployment:
@@ -177,7 +174,7 @@ def test_preset_renders_before_modifier() -> None:
 
 
 def test_a_manifest_that_renders_preset_after_modifier_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     """Checked against the rendered command rather than the declaration, so a
     rendering bug cannot pass a check on the manifest and still produce the
@@ -299,7 +296,7 @@ def test_declared_defaults_are_applied() -> None:
 
 
 def test_state_inside_a_config_hazard_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     """Nothing the platform writes may live where an update will overwrite it.
     For a flags-only title the set of files the platform writes is empty, which

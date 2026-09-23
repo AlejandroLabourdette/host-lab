@@ -9,11 +9,16 @@ from __future__ import annotations
 
 import ast
 import datetime
+import re
+import shutil
 import socket
 import struct
+import subprocess
 import threading
+import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -27,6 +32,7 @@ from hostlab.status import (
     Status,
     format_status,
     read_durability,
+    read_join_code,
 )
 
 VALHEIM = Path("titles/valheim.yaml")
@@ -168,6 +174,7 @@ def status_with(**overrides: object) -> Status:
         "liveness_error": None,
         "disk_free_bytes": 120_000_000_000,
         "last_backup": datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=6),
+        "join_code": None,
     }
     return Status(**{**base, **overrides})  # type: ignore[arg-type]
 
@@ -256,9 +263,13 @@ def test_the_reader_module_cannot_change_anything() -> None:
     for verb in forbidden:
         assert verb not in source, f"the reader must not be able to {verb}"
 
-    # It shells out to docker exactly once, and only to inspect.
-    assert source.count('"docker"') == 1
-    assert '"inspect"' in source
+    # Every docker call it makes is read-only. Counting occurrences would be
+    # brittle, and was: adding the join code reader gave it a second, equally
+    # harmless call. What has to hold is the subcommands, not the count.
+    subcommands = set(re.findall(r'\["docker", "(\w+)"', source))
+    assert subcommands <= {"inspect", "logs"}, (
+        f"the reader runs {subcommands - {'inspect', 'logs'}}, which is not reading"
+    )
 
 
 def test_the_publisher_never_reads_its_own_inbox() -> None:
@@ -291,3 +302,169 @@ def test_the_publisher_never_reads_its_own_inbox() -> None:
         "means also adding identity, authorization and an audit trail, which is "
         "the coupling ADR 0006 intended."
     )
+
+
+# ---------------------------------------------------------------------------
+# The crossplay join code
+# ---------------------------------------------------------------------------
+# ADR 0009 chose the relay, and ADR 0006 consequence 1 turns publishing the
+# code into an obligation: it regenerates on every restart, so a restart nobody
+# watched locks out everyone holding yesterday's code. Valheim has no admin
+# channel, so the server's log is the only source there is.
+
+REGISTERED = 'Session "Midgard" registered with join code 604510'
+ACTIVE = (
+    'Session "Midgard" with join code 604510 and IP 203.0.113.4:2456 is active with 0 player(s)'
+)
+# The server announces the session BEFORE the lobby exists, so this line really
+# does go out with nothing where the code should be.
+ANNOUNCED_TOO_EARLY = 'Session "Midgard" with join code  and IP  is active with 0 player(s)'
+
+
+def join_code_pattern() -> str:
+    manifest = load_manifest(VALHEIM)
+    assert manifest.reachability is not None
+    assert manifest.reachability.relay is not None
+    assert manifest.reachability.relay.join_code is not None
+    return manifest.reachability.relay.join_code.pattern
+
+
+def test_the_code_is_found_in_both_log_lines_the_server_writes() -> None:
+    import re
+
+    for line in (REGISTERED, ACTIVE):
+        match = re.search(join_code_pattern(), line)
+        assert match is not None
+        assert match.group("code") == "604510"
+
+
+def test_the_announcement_before_the_lobby_exists_is_not_mistaken_for_a_code() -> None:
+    """The trap this pattern exists to avoid. A lenient pattern would match
+    this line and publish an empty code with great confidence, and the failure
+    would look like the server being fine."""
+    import re
+
+    assert re.search(join_code_pattern(), ANNOUNCED_TOO_EARLY) is None
+
+
+def test_a_relay_that_rotates_its_code_must_say_where_to_read_it(
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
+) -> None:
+    """Otherwise the manifest describes a server that locks people out on every
+    restart with no way to recover, and says nothing about it."""
+    import copy
+
+    from hostlab.errors import ManifestInvalid
+
+    raw = copy.deepcopy(valheim_raw)
+    del raw["reachability"]["relay"]["join_code"]
+
+    with pytest.raises(ManifestInvalid, match="join_code"):
+        load_manifest(write_manifest(raw))
+
+
+def test_a_pattern_that_captures_nothing_is_refused(
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
+) -> None:
+    import copy
+
+    from hostlab.errors import ManifestInvalid
+
+    raw = copy.deepcopy(valheim_raw)
+    raw["reachability"]["relay"]["join_code"]["pattern"] = r"join code (?P<code>\d*)"
+
+    with pytest.raises(ManifestInvalid, match="empty"):
+        load_manifest(write_manifest(raw))
+
+
+def test_a_pattern_without_a_code_group_is_refused(
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
+) -> None:
+    import copy
+
+    from hostlab.errors import ManifestInvalid
+
+    raw = copy.deepcopy(valheim_raw)
+    raw["reachability"]["relay"]["join_code"]["pattern"] = r"join code \d+"
+
+    with pytest.raises(ManifestInvalid, match="code"):
+        load_manifest(write_manifest(raw))
+
+
+def test_the_newest_code_wins_when_the_log_holds_several() -> None:
+    """A long-running container's log carries every restart it has survived.
+    Taking the first match would publish a code that stopped working weeks ago,
+    which is worse than publishing none: it looks current."""
+    import re
+
+    log = "\n".join(
+        [
+            ANNOUNCED_TOO_EARLY,
+            'Session "Midgard" registered with join code 111111',
+            "some unrelated line",
+            'Session "Midgard" registered with join code 999999',
+        ]
+    )
+    matches = re.findall(join_code_pattern(), log)
+    assert matches[-1] == "999999"
+
+
+def test_the_join_code_is_shown_before_anything_a_friend_might_skim_past() -> None:
+    """It is how they connect and it is the most perishable line in the
+    report, so it goes above the player count and the save state."""
+    text = format_status(status_with(join_code="604510"))
+    lines = text.splitlines()
+
+    assert any("join code: 604510" in line for line in lines)
+    assert lines.index("join code: 604510") == 1
+
+
+def test_no_join_code_line_when_there_is_none() -> None:
+    """A server not using the relay should not carry an empty field."""
+    assert "join code" not in format_status(status_with())
+
+
+@pytest.mark.docker
+@pytest.mark.skipif(shutil.which("docker") is None, reason="needs docker")
+def test_the_join_code_is_read_out_of_a_real_container_log() -> None:
+    """Against an actual `docker logs`, not a string.
+
+    The three things that have to hold at once are all visible in one log: the
+    empty announcement is ignored, a code from before the last restart is not
+    published as current, and the newest one wins.
+    """
+    name = f"hostlab-jc-{time.monotonic_ns()}"
+    script = "\n".join(
+        [
+            "echo 'Session \"Midgard\" with join code  and IP  is active with 0 player(s)'",
+            "echo 'Session \"Midgard\" registered with join code 111111'",
+            "echo 'Session \"Midgard\" registered with join code 604510'",
+            "sleep 600",
+        ]
+    )
+
+    subprocess.run(
+        ["docker", "run", "--detach", "--name", name, "alpine", "sh", "-c", script],
+        capture_output=True,
+        check=True,
+        timeout=180,
+    )
+
+    try:
+        deadline = time.monotonic() + 30
+        code = None
+        while time.monotonic() < deadline:
+            code = read_join_code(load_manifest(VALHEIM), name)
+            if code is not None:
+                break
+            time.sleep(0.25)
+
+        assert code == "604510", "the newest code wins, and the empty line is not one"
+    finally:
+        subprocess.run(["docker", "rm", "--force", name], capture_output=True, check=False)
+
+
+def test_no_join_code_is_reported_for_a_container_that_does_not_exist() -> None:
+    """Absence has to be absence rather than an exception, because the status
+    report has to render for a server that is down as well as one that is up."""
+    assert read_join_code(load_manifest(VALHEIM), "hostlab-no-such-container") is None

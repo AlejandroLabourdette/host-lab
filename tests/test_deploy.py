@@ -81,9 +81,23 @@ def test_a_missing_secret_is_refused_with_where_to_get_it(
 
 
 def test_every_published_port_carries_udp() -> None:
-    """ADR 0004 consequence 1, at the last place it could still go wrong."""
+    """ADR 0004 consequence 1, at the last place it could still go wrong.
+
+    Three ports rather than two because this deployment runs crossplay
+    (ADR 0009), which brings 2458 with it. None of them is forwarded at a
+    router, since there is no router to forward at, but they are still
+    published so anyone on the LAN can connect directly.
+    """
     ports = composed()["services"]["valheim"]["ports"]
-    assert ports == ["2456:2456/udp", "2457:2457/udp"]
+
+    assert ports == ["2456:2456/udp", "2457:2457/udp", "2458:2458/udp"]
+    assert all(entry.endswith("/udp") for entry in ports)
+
+
+def test_the_relay_flag_is_actually_in_the_command() -> None:
+    """ADR 0009's decision, at the only place that makes it real. Without this
+    flag the server waits for inbound connections that cannot arrive."""
+    assert "-crossplay" in composed()["services"]["valheim"]["command"]
 
 
 def test_the_stop_signal_and_grace_period_are_written_explicitly() -> None:

@@ -260,11 +260,33 @@ The report answers, in this order:
 
 ```
 Valheim: online, up 3h
+join code: 604510
 players: 3/10
 saves: ok (Midgard gen 7)
 backup: 6h ago
 disk free: 355.2 GB
 ```
+
+**The join code is second, above everything a friend might skim past.** Since
+[ADR 0009](decisions/0009-reach-the-server-without-a-router-we-control.md) chose the relay, that
+line is how anyone connects at all, and it is the most perishable thing in the report because it
+regenerates on every restart.
+
+Valheim has no administration channel, so the code is read out of the server's log. Three things
+had to be right, and all three are failures that would look like success:
+
+- **The server announces the session before the lobby exists**, writing a line with nothing where
+  the code should be. A lenient pattern captures `""` from it and publishes that confidently. The
+  manifest's pattern requires digits, and the schema refuses a pattern that would accept an empty
+  one.
+- **A long-running container's log holds every restart it has survived**, so the first match is
+  usually a code that stopped working weeks ago. The **last** match wins. Publishing a stale code
+  is worse than publishing none, because it looks current.
+- **The pattern lives in the manifest, not in the code.** This couples the platform to a game's
+  log format, which is the coupling [`always-on-operation.md`](always-on-operation.md) warns
+  about. It is accepted because there is no other source, and contained by making a log wording
+  change a manifest edit. It is the most fragile claim in this project: if Iron Gate rewords that
+  line, publication breaks **silently** while the server keeps working perfectly.
 
 **The order is deliberate and it is not the conventional one.** Liveness is
 listed after durability because it is the least valuable check here: a server

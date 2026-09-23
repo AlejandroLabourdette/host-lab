@@ -53,16 +53,26 @@ settings:
   # server's way of refusing is to exit looking like a crash.
   password: ${VALHEIM_PASSWORD}
 
-  # 0 keeps the server out of the community browser. It stays joinable by
-  # address. The password is not access control; for a genuinely private world
-  # use permittedlist.txt, remembering that a non-empty one excludes everyone
-  # not on it.
+  # 0, and under ADR 0009 this is the only sensible value rather than a
+  # preference: a public listing needs a reachable query port, and nothing is
+  # forwarded here, so advertising the server would list something nobody can
+  # reach. Players join by code; anyone on the LAN can still use the address.
+  #
+  # The password is not access control. For a genuinely private world use
+  # permittedlist.txt, remembering that a non-empty one excludes everyone not
+  # on it.
   public: 0
 
-  # Everyone in this group is on Steam, so crossplay is not required and the
-  # direct UDP path applies: lower latency, no third-party relay, and no join
-  # code that rotates on every restart. See ADR 0002 branch 3.
-  crossplay: false
+  # ADR 0009. Not because anyone is on a console, which nobody is, but because
+  # the host sits on a shared building network with no router access, so port
+  # forwarding is unavailable and the direct UDP path of ADR 0002 branch 3 was
+  # never on the table. Crossplay relays through PlayFab and needs nothing
+  # inbound.
+  #
+  # The cost is a join code that regenerates on every restart. That is what
+  # makes `hostlab publish` mandatory rather than a convenience: a restart at
+  # 5am silently locks out everyone holding yesterday's code.
+  crossplay: true
 
   # Agree DeathPenalty as a group before starting rather than after someone's
   # first bad death. Note that -preset is rendered before -modifier, because a

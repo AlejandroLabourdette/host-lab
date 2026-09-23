@@ -28,7 +28,7 @@ def valheim_raw() -> dict[str, Any]:
 
 
 @pytest.fixture
-def write_manifest(tmp_path: Path) -> object:
+def write_manifest(tmp_path: Path) -> Callable[..., Path]:
     """Write a manifest dict to a temporary file and hand back the path."""
 
     def write(raw: dict[str, Any], name: str = "title.yaml") -> Path:

@@ -361,6 +361,32 @@
       "title": "HttpAcquire",
       "type": "object"
     },
+    "JoinCode": {
+      "additionalProperties": false,
+      "description": "How to find the code players need, for a relay that issues one.\n\nValheim has no administration channel, so the server's log is the only\nplace this appears. That couples the platform to a game's log format, which\nis the coupling `always-on-operation.md` warns about. It is accepted\nbecause there is no other source, and contained by living here as data: a\nlog format change is a manifest edit, not a code change.",
+      "properties": {
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "pattern": {
+          "description": "Regex with a named group 'code', matched against the log stream",
+          "title": "Pattern",
+          "type": "string"
+        },
+        "source": {
+          "const": "container_log",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "pattern",
+        "evidence"
+      ],
+      "title": "JoinCode",
+      "type": "object"
+    },
     "MinLengthConstraint": {
       "additionalProperties": false,
       "description": "A setting must be at least this long.",
@@ -686,6 +712,17 @@
         },
         "evidence": {
           "$ref": "#/$defs/Evidence"
+        },
+        "join_code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JoinCode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "name": {
           "title": "Name",

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -40,6 +41,12 @@ if TYPE_CHECKING:
 # right now. always-on-operation.md: "a server that restarted eleven times
 # overnight is broken". Compose cannot express this, so the reader carries it.
 RESTART_ALARM = 5
+
+# How far back to look in the container log for the join code. The code is
+# written once at startup, so on a long-running server it is far behind the
+# newest line. Large enough to survive a chatty boot, bounded so this never
+# reads a week of logs.
+JOIN_CODE_LOG_LINES = 5000
 
 
 @dataclass(frozen=True)
@@ -90,6 +97,7 @@ class Status:
     liveness_error: str | None
     disk_free_bytes: int | None
     last_backup: datetime.datetime | None
+    join_code: str | None = None
 
     @property
     def players(self) -> int | None:
@@ -146,6 +154,46 @@ def read_container(container: str) -> ContainerStatus:
     )
 
 
+def read_join_code(manifest: TitleManifest, container: str) -> str | None:
+    """Find the relay join code in the container's log.
+
+    ADR 0009 chose crossplay, and ADR 0006 consequence 1 makes publishing the
+    code an obligation: it regenerates on every restart, so a restart nobody
+    watched silently locks out everyone holding yesterday's code.
+
+    Valheim has no administration channel, so the log is the only source. The
+    pattern comes from the manifest rather than from here, which keeps a log
+    format change a manifest edit instead of a code change.
+
+    **The last match wins, not the first.** The server announces the session
+    before the lobby exists, and it restarts, so earlier lines in the same log
+    carry stale codes or none at all.
+    """
+    relay = manifest.reachability.relay if manifest.reachability is not None else None
+    if relay is None or relay.join_code is None:
+        return None
+
+    try:
+        completed = subprocess.run(
+            ["docker", "logs", "--tail", str(JOIN_CODE_LOG_LINES), container],  # noqa: S607
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+
+    if completed.returncode != 0:
+        return None
+
+    # Valheim writes to stdout, but a title that writes to stderr should not
+    # silently produce no code.
+    stream = completed.stdout + completed.stderr
+    matches = re.findall(relay.join_code.pattern, stream)
+    return str(matches[-1]) if matches else None
+
+
 def read_durability(manifest: TitleManifest, state_dir: Path) -> Durability | None:
     if manifest.state_consistency is None or not state_dir.exists():
         return None
@@ -197,6 +245,7 @@ def read_status(
         liveness_error=liveness_error,
         disk_free_bytes=disk_free,
         last_backup=last_backup,
+        join_code=read_join_code(manifest, container) if container_status.running else None,
     )
 
 
@@ -229,6 +278,11 @@ def format_status(status: Status) -> str:
         lines.append(f"{status.title_name}: online, {up}")
     else:
         lines.append(f"{status.title_name}: OFFLINE")
+
+    # Before anything else a friend might read past. This is how they connect,
+    # and it changes on every restart, so it is the most perishable line here.
+    if status.join_code is not None:
+        lines.append(f"join code: {status.join_code}")
 
     if status.info is not None:
         lines.append(f"players: {status.info.players}/{status.info.max_players}")

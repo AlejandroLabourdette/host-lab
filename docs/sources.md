@@ -60,6 +60,7 @@ and **flagged as secondary at the point of use** in each document.
 | [minecraft.wiki, Java Edition server](https://minecraft.wiki/w/Tutorial:Setting_up_a_Java_Edition_server) | Community wiki | Minecraft row of the evidence table: `server.jar` from the official download page, JRE requirement, `eula.txt` refusal to start, port 25565, `server.properties`, `world/` | Community-run, not Mojang |
 | [Official Satisfactory Wiki, Dedicated servers](https://satisfactory.wiki.gg/wiki/Dedicated_servers) | Community wiki | Satisfactory row: app `1690800`, 7777 TCP and UDP, 8888 TCP, HTTPS API, in-game Server Manager, port redirection unsupported on the standard port, and the `-ExternalReliablePort=` exception | Community-run despite the "Official" in its name, which refers to the developer's endorsement rather than authorship |
 | [Enshrouded Wiki, Dedicated Server Hosting](https://enshrouded.fandom.com/wiki/Dedicated_Server_Hosting) | Community wiki | The authority for the Enshrouded row. **Listed as where to verify, not as a source consulted**: not retrievable for this revision | Community-run |
+| [Valheim Wiki (Fandom), Dedicated servers](https://valheim.fandom.com/wiki/Dedicated_servers) | Community wiki | The two log lines carrying the crossplay join code, and that the session is announced before the code exists | **Iron Gate publishes no log format reference at all.** This is the single most fragile claim in the project: a reworded line breaks publication silently |
 | [docker/roadmap issue #515](https://github.com/docker/roadmap/issues/515) | Issue tracker | Docker Desktop on Windows requires an interactive logged-on session and has no supported service mode. The reason [ADR 0007](decisions/0007-host-on-windows-with-docker-desktop-and-wsl2.md) needs auto-logon | A long-standing open request, not documentation. Docker does not state the limitation on a product page |
 
 **One repository, two names.** This project was `lloesche/valheim-server-docker` and now lives under
@@ -105,6 +106,7 @@ Event-driven rather than calendar-driven, because these documents rot on events,
 | Trigger | Re-check |
 |---|---|
 | **A Valheim major version** | Save format, conversion behaviour, launch parameters, ports. Assume the save format changed until proven otherwise |
+| **Any Valheim update, for the join code line** | The log wording the join code is read from. It breaks silently: the server keeps working and the published code simply stops changing. See [`remote-control.md`](remote-control.md) |
 | **Any Valheim patch, while 1.0.x is moving this fast** | The news index, for anything touching dedicated servers or saves |
 | **Crossplay or platform support changes** | The backend comparison in [`networking.md`](networking.md) and the platform list |
 | **The ISP or router changes** | The whole connection diagnostic in [`networking.md`](networking.md). Do not assume the connection type carried over |
@@ -125,11 +127,14 @@ If time is short, these are the ones where being wrong costs the most.
    of play on every stop. Verify by stopping a server and checking the `.ok` marker.
 3. **Port protocols.** Secondary. Getting it wrong means a server that looks correct and is
    unreachable.
-4. **That UDP traverses Docker Desktop's published-port proxy from outside the network.** Not
+4. **The log line the crossplay join code is read from.** No vendor reference exists, and the
+   failure is silent: the server keeps working and the published code silently stops being the
+   real one. Verify it against the real server's first crossplay start.
+5. **That UDP traverses Docker Desktop's published-port proxy from outside the network.** Not
    vendor-documented either way, and the whole reachability path rests on it. This is an
    observation of this host, proven by datagram in [`networking.md`](networking.md), not a fact
    about the product. Re-prove it after any Docker Desktop or WSL update.
-5. **Whether the connection is behind CGNAT.** Not a documentation fact at all, but the one that
+6. **Whether the connection is behind CGNAT.** Not a documentation fact at all, but the one that
    invalidates the most downstream work if it changes.
 
 ### Conventions for adding sources

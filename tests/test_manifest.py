@@ -14,8 +14,9 @@ typos is not earning anything.
 from __future__ import annotations
 
 import copy
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any
 
 import pytest
 
@@ -24,10 +25,6 @@ from hostlab.manifest import MustPrecedeConstraint, load_manifest
 from hostlab.schema import SCHEMA_PATH, render
 
 VALHEIM = Path("titles/valheim.yaml")
-
-
-class WriteManifest(Protocol):
-    def __call__(self, raw: dict[str, Any], name: str = ...) -> Path: ...
 
 
 # ---------------------------------------------------------------------------
@@ -182,7 +179,7 @@ def test_invalid_yaml_is_refused_as_yaml_not_as_a_contract_failure(tmp_path: Pat
 
 @pytest.mark.parametrize("field", ["acquire", "runtime", "config", "state_dir", "stop", "health"])
 def test_a_missing_required_field_names_itself(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest, field: str
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path], field: str
 ) -> None:
     """The Required column of the contract table, enforced. The error names the
     field, because ADR 0008 chose this validator for error quality."""
@@ -193,7 +190,7 @@ def test_a_missing_required_field_names_itself(
 
 
 def test_a_port_without_remap_allowed_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     """It has no default on purpose. Satisfactory cannot remap its standard
     port but can remap its second, so silence here would hide the thing that
@@ -205,7 +202,7 @@ def test_a_port_without_remap_allowed_is_refused(
 
 
 def test_a_port_that_forbids_remapping_must_say_why(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     """A refusal that cannot explain itself gets overridden by whoever hits it,
     and for ports the result is a server that starts, lists itself, and refuses
@@ -217,7 +214,7 @@ def test_a_port_that_forbids_remapping_must_say_why(
 
 
 def test_a_duplicated_port_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     raw = copy.deepcopy(valheim_raw)
     raw["ports"].append(copy.deepcopy(raw["ports"][0]))
@@ -226,7 +223,7 @@ def test_a_duplicated_port_is_refused(
 
 
 def test_a_flag_pointing_at_an_unknown_setting_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     """Field-by-field this manifest is fine. It would render a server missing
     whatever that flag was meant to carry."""
@@ -237,7 +234,7 @@ def test_a_flag_pointing_at_an_unknown_setting_is_refused(
 
 
 def test_an_ordering_rule_naming_an_unknown_flag_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     raw = copy.deepcopy(valheim_raw)
     for constraint in raw["config"]["constraints"]:
@@ -248,7 +245,7 @@ def test_an_ordering_rule_naming_an_unknown_flag_is_refused(
 
 
 def test_liveness_aimed_at_an_undeclared_port_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     """Otherwise the check fails forever and reads as an outage rather than as
     a manifest error."""
@@ -259,7 +256,7 @@ def test_liveness_aimed_at_an_undeclared_port_is_refused(
 
 
 def test_durability_without_a_consistency_rule_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     """Whether state is advancing is unanswerable without knowing what a complete
     save looks like. Accepting this would ship a durability signal that cannot
@@ -271,7 +268,7 @@ def test_durability_without_a_consistency_rule_is_refused(
 
 
 def test_a_consistency_pattern_without_a_generation_group_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     raw = copy.deepcopy(valheim_raw)
     raw["state_consistency"]["generation_pattern"] = r"^_main\.\d+\."
@@ -280,7 +277,7 @@ def test_a_consistency_pattern_without_a_generation_group_is_refused(
 
 
 def test_a_marker_template_that_cannot_name_a_generation_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     raw = copy.deepcopy(valheim_raw)
     raw["state_consistency"]["complete_marker"] = "_main.ok"
@@ -289,7 +286,7 @@ def test_a_marker_template_that_cannot_name_a_generation_is_refused(
 
 
 def test_an_allow_file_without_its_semantics_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     raw = copy.deepcopy(valheim_raw)
     del raw["players"]["allow_semantics"]
@@ -298,7 +295,7 @@ def test_an_allow_file_without_its_semantics_is_refused(
 
 
 def test_an_unknown_field_is_refused_rather_than_ignored(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     """A typo that is silently ignored is a setting that silently does nothing,
     and the reader has no way to tell which they have."""
@@ -309,7 +306,7 @@ def test_an_unknown_field_is_refused_rather_than_ignored(
 
 
 def test_a_flag_with_both_a_literal_and_a_setting_is_refused(
-    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+    valheim_raw: dict[str, Any], write_manifest: Callable[..., Path]
 ) -> None:
     raw = copy.deepcopy(valheim_raw)
     raw["config"]["flags"][2]["literal"] = "fixed"

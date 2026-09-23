@@ -471,6 +471,31 @@ reachability:
     enabled_by: crossplay
     removes_port_forwarding: true
     rotates_join_code_on_restart: true
+
+    # Valheim has no administration channel, so the server's log is the only
+    # place the join code appears. Requiring at least four digits is not
+    # decoration: the server announces the session BEFORE the lobby exists, so
+    # the first matching line carries an empty code, and a lenient pattern
+    # would confidently publish nothing. The reader takes the LAST match for
+    # the same reason.
+    join_code:
+      source: container_log
+      pattern: 'join code (?P<code>\d{4,10})'
+      evidence:
+        kind: community
+        note: >-
+          The server logs two lines carrying the code: 'Session "<name>"
+          registered with join code <code>' and 'Session "<name>" with join
+          code <code> and IP <addr> is active with N player(s)'. Iron Gate
+          documents neither: there is no published log format reference at all,
+          so this is observed from server output reproduced across hosting
+          providers' documentation. It is the most fragile thing in this
+          manifest, because a log wording change would break publication
+          silently while the server kept working perfectly. Verify it against
+          the real server's first crossplay start, and re-check it after any
+          Valheim update.
+        source: https://valheim.fandom.com/wiki/Dedicated_servers
+        verified: 2026-09-23
     evidence:
       kind: vendor
       note: >-
