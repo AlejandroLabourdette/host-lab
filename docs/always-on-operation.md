@@ -60,7 +60,7 @@ So whatever supervisor is chosen, two things must be set explicitly and verified
 > (see [`save-data-and-backups.md`](save-data-and-backups.md)).
 
 A stop procedure nobody has tested is a data-loss incident waiting for a reboot. And because the
-control plane described in `remote-control.md` will let friends stop the server, this constraint is
+control plane described in [`remote-control.md`](remote-control.md) will let friends stop the server, this constraint is
 inherited by every "stop" button that ever gets built: a stop that is not graceful is not a stop.
 
 ## The machine stays up
@@ -150,7 +150,7 @@ A control-plane product that runs game servers in containers and exposes a web U
   blast radius. It also imposes its own model of what a game server is, which the platform would
   then be built inside rather than on top of.
 - **Verdict:** premature. It is the right answer later if the control plane grows demanding, and
-  `remote-control.md` revisits it as an option there rather than as the foundation.
+  [`remote-control.md`](remote-control.md) revisits it as an option there rather than as the foundation.
 
 ### Comparison
 
@@ -186,7 +186,7 @@ over memory growth. Worth having, with three conditions:
   data-loss job.
 - **Remember it rotates the crossplay join code.** If the group is on crossplay, an automatic 5am
   restart silently invalidates the code everyone has. Either publish the new one automatically or
-  do not schedule restarts. See `remote-control.md`.
+  do not schedule restarts. See [`remote-control.md`](remote-control.md).
 
 ## Updates without losing the world
 
@@ -278,4 +278,4 @@ reports itself. **Liveness and durability are different claims**, and only one o
 reason this project exists.
 
 Alerting has to reach the owner without them looking, otherwise it is a dashboard nobody opens.
-Where it goes is a control-plane question: see `remote-control.md`.
+Where it goes is a control-plane question: see [`remote-control.md`](remote-control.md).

@@ -18,6 +18,7 @@ The documents are written to be read in this order. Each one assumes the ones ab
 | 3 | [`save-data-and-backups.md`](save-data-and-backups.md) | What is the world on disk, what has to be copied, and how do we know it would come back? |
 | 4 | [`always-on-operation.md`](always-on-operation.md) | What keeps the machine, the process and the world alive without anyone watching? |
 | 5 | [`platform-architecture.md`](platform-architecture.md) | What is shared across games, what is specific to one, and where does the boundary go? |
+| 6 | [`remote-control.md`](remote-control.md) | How do friends start, stop and check the server without the owner present? |
 
 More documents are added to this table as they are written. The set is not complete yet.
 
@@ -39,6 +40,7 @@ without destroying the record of why the shape is what it is.
 | [0003](decisions/0003-back-up-world-saves-off-the-host.md) | Back up world saves off the host | Accepted |
 | [0004](decisions/0004-run-game-servers-as-containers.md) | Run game servers as containers | Accepted |
 | [0005](decisions/0005-describe-titles-with-a-declarative-manifest.md) | Describe titles with a declarative manifest | Accepted |
+| [0006](decisions/0006-give-friends-a-control-plane.md) | Give friends a control plane, starting with read-only status | Accepted |
 
 ## Layout, and why it is this way
 

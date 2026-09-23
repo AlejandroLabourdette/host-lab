@@ -68,7 +68,7 @@ A mature, purpose-built shell framework, with Valheim supported as `vhserver`.
   of servers. It also imposes its own model of a game server, which the platform would be built
   inside rather than on top of.
 - **Verdict:** premature as a foundation. Reconsidered as a control-plane option in
-  `remote-control.md`, which is the problem it is actually good at.
+  [`remote-control.md`](../remote-control.md), which is the problem it is actually good at.
 
 ## Decision
 
@@ -109,7 +109,7 @@ Docker already being present is noted, and is not the reason.
 
 ## Revisit if
 
-- The control plane in `remote-control.md` grows demanding enough that a panel's user and
+- The control plane in [`remote-control.md`](../remote-control.md) grows demanding enough that a panel's user and
   permission model would be a net saving rather than a net cost. At that point D stops being
   premature.
 - Podman's rootless model proves materially safer here. The decision is "containers", not

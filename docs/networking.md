@@ -79,7 +79,7 @@ This is not a decision to make in the abstract, because one input settles it:
 - **If anyone in the group plays on a console or on Game Pass, crossplay is mandatory.** There is
   no other way for them to connect. The networking question then largely evaporates, and the
   problem to solve becomes the rotating join code instead - see
-  `remote-control.md`, where publishing the current code is a control-plane
+  [`remote-control.md`](remote-control.md), where publishing the current code is a control-plane
   responsibility.
 - **If everyone is on Steam**, the choice is real: crossplay trades measurable latency and a
   third-party dependency for skipping this entire document. For a group whose ISP turns out to be

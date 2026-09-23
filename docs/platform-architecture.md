@@ -229,7 +229,7 @@ with the simplest direct path and add machinery only when a concrete need justif
   they will look up once.
 - **Player identity across games.** A Steam ID, a Minecraft UUID and a PlayFab ID are not the same
   person in any way the platform can verify. The control plane needs its own identity
-  (`remote-control.md`); mapping that onto each game's identity is a per-title
+  ([`remote-control.md`](remote-control.md)); mapping that onto each game's identity is a per-title
   concern and mostly a manual one.
 - **Mod management.** Out of scope per [`scope-and-goals.md`](scope-and-goals.md), and a different
   problem in every title.
