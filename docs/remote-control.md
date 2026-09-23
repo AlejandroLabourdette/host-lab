@@ -245,6 +245,64 @@ have to check.
 - **Editing world settings.** Rare, risky, and the owner's job.
 - **Mod management.** Out of scope.
 
+## The tooling, as built
+
+Stage 1 only. **Nothing in it can start, stop or restart a server**, and that
+is a property of the code rather than a promise: `hostlab` has no such command,
+and a test parses the reader's source to assert it never invokes one.
+
+| Command | Does |
+|---|---|
+| `hostlab status <title> --container <name> --state-dir <dir>` | The state reader. Prints the report and exits non-zero if the server is unhealthy |
+| `hostlab publish <title> ...` | The same report, sent to Telegram |
+
+The report answers, in this order:
+
+```
+Valheim: online, up 3h
+players: 3/10
+saves: ok (Midgard gen 7)
+backup: 6h ago
+disk free: 355.2 GB
+```
+
+**The order is deliberate and it is not the conventional one.** Liveness is
+listed after durability because it is the least valuable check here: a server
+that is down reports itself within minutes, because somebody complains. The
+failure that costs a world is the quiet one, and it looks like this:
+
+```
+Valheim: online, up 21s
+saves: STALE, nothing written for 9h
+```
+
+Up, healthy by every conventional measure, and not saving. That is
+[issue #802](https://github.com/community-valheim-tools/valheim-server-docker/issues/802)
+exactly, and the reason the save state is read from the filesystem rather than
+inferred from the game.
+
+Three more behaviours worth knowing:
+
+- **A query failure is not reported as "down".** If the game stops answering
+  A2S the report says `players: unknown` and still reports the save state.
+  A health check coupled to a game's query protocol is coupled to that game's
+  releases, which is what broke LinuxGSM's Valheim monitor; the durability half
+  reads the filesystem and no game update can break it.
+- **A crash loop is reported even while the server is up**, because a server
+  that restarted eleven times overnight is broken. Compose cannot express a
+  restart rate cap outside Swarm, so the reader carries it.
+- **The bot never reads its own inbox.** No `getUpdates`, no webhook, no
+  commands. One standing message is edited rather than a new one sent each
+  cycle, because a channel full of "still up" teaches people to mute it.
+
+### What this costs to attack
+
+Worth stating, because it is the answer to "is a bot token safe in a group
+chat's infrastructure". A leaked token lets an attacker **edit a status
+message**. It does not let them touch the server, because nothing in stage 1
+can. Stage 2 changes that, and it must add identity, authorization and an audit
+trail in the same change.
+
 ## Recommendation
 
 **Start with always-on and read-only status. Add control only when a second title makes it real.**
