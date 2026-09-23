@@ -34,12 +34,13 @@ play next. All accessed 2026-09-22, and sourced per title:
 | Valheim | [Iron Gate](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/) and the [Valheim Wiki](https://valheim.weirdgloop.org/w/Dedicated_servers) | Yes, in depth. See [`titles/valheim.md`](titles/valheim.md) |
 | Minecraft (Java) | [minecraft.wiki, Setting up a Java Edition server](https://minecraft.wiki/w/Tutorial:Setting_up_a_Java_Edition_server) | Yes |
 | Satisfactory | [Official Satisfactory Wiki, Dedicated servers](https://satisfactory.wiki.gg/wiki/Dedicated_servers) | Yes |
-| Palworld | [Pocketpair, Dedicated Server Guide](https://docs.palworldgame.com/dedicated-server-guide) | **No.** Vendor page did not render for this revision; values below are from community documentation |
-| Enshrouded | [Enshrouded Wiki, Dedicated Server Hosting](https://enshrouded.fandom.com/wiki/Dedicated_Server_Hosting) | **No.** Not retrievable for this revision; values below are from community documentation |
+| Palworld | [Pocketpair, Dedicated Server Guide](https://docs.palworldgame.com/dedicated-server-guide) | **No.** The vendor page did not render for this revision, and the values below carry **no citation at all**: verify before use |
+| Enshrouded | [Enshrouded Wiki, Dedicated Server Hosting](https://enshrouded.fandom.com/wiki/Dedicated_Server_Hosting) | **No.** Not retrievable for this revision; the values below carry **no citation at all**: verify before use |
 
-**The two unverified rows are marked deliberately rather than quietly dropped.** They support an
-argument about the *shape* of game servers, not a runbook, and an error in one of their cells would
-not overturn the conclusion. But per [ADR 0005](decisions/0005-describe-titles-with-a-declarative-manifest.md)
+**The two unverified rows are marked deliberately rather than quietly dropped**, and "unverified"
+here means exactly that: the linked page is where the answer lives, not where these values came
+from. They support an argument about the *shape* of game servers, not a runbook, and an error in
+one of their cells would not overturn the conclusion. But per [ADR 0005](decisions/0005-describe-titles-with-a-declarative-manifest.md)
 consequence 1, **a title actually joining the platform needs a full manifest built from primary
 sources**, and neither of these has one yet. Do not treat the row as the research.
 

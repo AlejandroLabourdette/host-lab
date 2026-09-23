@@ -39,7 +39,7 @@ Vendor and standards documentation. These outrank everything below them.
 | [playit.gg](https://playit.gg/) | playit.gg | no date on page | **Valheim is a free game preset**; 19 datacentres; players install nothing. Premium is $3/month, but **the page does not state the free/Premium tunnel-type boundary clearly enough to cite**, so this documentation does not claim one |
 | [LinuxGSM Valheim](https://linuxgsm.com/servers/vhserver/) | LinuxGSM | ongoing | Valheim supported as `vhserver`; monitor, update and alerting features |
 | [Tailscale connection types](https://tailscale.com/kb/1257/connection-types) | Tailscale | ongoing | Connections start relayed via DERP and are upgraded to direct; direct is lowest latency |
-| [Pocketpair, Palworld Dedicated Server Guide](https://docs.palworldgame.com/dedicated-server-guide) | Pocketpair | ongoing | The vendor authority for the Palworld row. **Listed as where to verify, not as a source consulted**: the page did not render for this revision |
+| [Pocketpair, Palworld Dedicated Server Guide](https://docs.palworldgame.com/dedicated-server-guide) | Pocketpair | ongoing | The vendor authority for the Palworld row. **Listed as where to verify, not as a source consulted**: the page did not render for this revision, so nothing here rests on it |
 
 ## Secondary sources
 
