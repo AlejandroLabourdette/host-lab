@@ -50,8 +50,10 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Tests assert, use fixture paths, and print. That is what tests do.
-"tests/**" = ["S101", "ANN", "T20"]
+# Tests assert, print, and hardcode passwords. That is what tests do: the
+# password rules are the most-tested logic here, and testing them requires
+# writing passwords down.
+"tests/**" = ["S101", "S105", "S106", "S107", "ANN", "T20"]
 # The prover is deliberately stdlib-only and 3.9-compatible so it runs on
 # whatever Python is to hand during a network problem. See ADR 0008.
 "tools/**" = ["ANN", "T20", "UP", "EM", "PTH", "S311"]

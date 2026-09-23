@@ -342,9 +342,28 @@ class Port(BaseModel):
     protocol: Literal["udp", "tcp"]
     role: str = Field(min_length=1)
     remap_allowed: bool
+    remap_evidence: Evidence | None = Field(
+        default=None, description="Why remapping is forbidden. Required when remap_allowed is false"
+    )
     forward: bool = Field(description="Does this need a rule at the household router?")
     when: str | None = Field(default=None, description="Only present if this bool setting is true")
-    note: str | None = None
+    note: str | None = Field(
+        default=None, description="How this port fails, for the operator reading a symptom"
+    )
+
+    @model_validator(mode="after")
+    def _a_forbidden_remap_says_why(self) -> Port:
+        # "You may not do that" without a reason invites someone to decide the
+        # rule is superstition, and for ports that decision produces a server
+        # which starts, lists itself, and refuses every connection. The reason
+        # is per-port, so it cannot live in a comment next to one of them.
+        if not self.remap_allowed and self.remap_evidence is None:
+            msg = (
+                f"port {self.number}: remap_allowed is false, so remap_evidence must say "
+                "why, because a refusal that cannot explain itself gets overridden"
+            )
+            raise ValueError(msg)
+        return self
 
 
 class SignalStop(BaseModel):

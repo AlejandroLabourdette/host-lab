@@ -204,6 +204,18 @@ def test_a_port_without_remap_allowed_is_refused(
         load_manifest(write_manifest(raw))
 
 
+def test_a_port_that_forbids_remapping_must_say_why(
+    valheim_raw: dict[str, Any], write_manifest: WriteManifest
+) -> None:
+    """A refusal that cannot explain itself gets overridden by whoever hits it,
+    and for ports the result is a server that starts, lists itself, and refuses
+    every connection. The reason is per-port, so it cannot live in a comment."""
+    raw = copy.deepcopy(valheim_raw)
+    del raw["ports"][0]["remap_evidence"]
+    with pytest.raises(ManifestInvalid, match="remap_evidence"):
+        load_manifest(write_manifest(raw))
+
+
 def test_a_duplicated_port_is_refused(
     valheim_raw: dict[str, Any], write_manifest: WriteManifest
 ) -> None:

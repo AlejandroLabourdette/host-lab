@@ -559,6 +559,7 @@
             }
           ],
           "default": null,
+          "description": "How this port fails, for the operator reading a symptom",
           "title": "Note"
         },
         "number": {
@@ -578,6 +579,18 @@
         "remap_allowed": {
           "title": "Remap Allowed",
           "type": "boolean"
+        },
+        "remap_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Evidence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why remapping is forbidden. Required when remap_allowed is false"
         },
         "role": {
           "minLength": 1,

@@ -319,6 +319,16 @@ ports:
     protocol: udp
     role: game
     remap_allowed: false
+    remap_evidence:
+      kind: community
+      note: >-
+        Valheim advertises its own port to the Steam lobby, so remapping the
+        external port produces a listing that advertises a port nobody can
+        reach. The server starts, appears in the browser, and refuses every
+        connection. Iron Gate states the port range but not this behaviour, so
+        it is observed rather than documented.
+      source: https://valheim.weirdgloop.org/w/Dedicated_servers
+      verified: 2026-09-22
     forward: true
     note: >-
       Gameplay. Reachable but 2457 not means the server never appears in a
@@ -329,6 +339,16 @@ ports:
     protocol: udp
     role: query
     remap_allowed: false
+    remap_evidence:
+      kind: community
+      note: >-
+        Valheim advertises its own port to the Steam lobby, so remapping the
+        external port produces a listing that advertises a port nobody can
+        reach. The server starts, appears in the browser, and refuses every
+        connection. Iron Gate states the port range but not this behaviour, so
+        it is observed rather than documented.
+      source: https://valheim.weirdgloop.org/w/Dedicated_servers
+      verified: 2026-09-22
     forward: true
     note: >-
       Steam query and A2S. Forward it even on a private server: with public 0
@@ -340,6 +360,16 @@ ports:
     protocol: udp
     role: crossplay
     remap_allowed: false
+    remap_evidence:
+      kind: community
+      note: >-
+        Valheim advertises its own port to the Steam lobby, so remapping the
+        external port produces a listing that advertises a port nobody can
+        reach. The server starts, appears in the browser, and refuses every
+        connection. Iron Gate states the port range but not this behaviour, so
+        it is observed rather than documented.
+      source: https://valheim.weirdgloop.org/w/Dedicated_servers
+      verified: 2026-09-22
     forward: false
     when: crossplay
     note: >-
@@ -347,10 +377,6 @@ ports:
       2456-2458, but crossplay is relayed and needs no forwarding at all, so
       forwarding this rarely matters. Iron Gate documents only the port and
       port+1.
-
-# remap_allowed is false on every port above, for a reason that is Valheim's
-# rather than the platform's: it advertises its own port to the Steam lobby, so
-# remapping produces a listing that advertises a port nobody can reach.
 
 # --------------------------------------------------------------------------
 # Stop
