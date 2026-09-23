@@ -22,6 +22,7 @@ Valheim is not an HTTP service and the usual intuitions do not transfer.
 |---|---|---|---|
 | 2456 (the `-port` value) | **UDP** | Gameplay RPC. The actual game traffic. | Yes |
 | 2457 (`-port` + 1) | **UDP** | Steam query port, including A2S. Public lobby registration, metadata and server heartbeat. | Yes, always. See below |
+| 2458 | UDP | Associated with the crossplay backend. | Optional. Crossplay is relayed, so it needs no forwarding. See below. |
 | A random high port | TCP | Steamworks API, for Steam's own internal library use. | **No.** Never expose this. |
 
 Source: [Valheim Wiki, Dedicated servers](https://valheim.weirdgloop.org/w/Dedicated_servers)
@@ -271,12 +272,14 @@ An agent on the host holds an outbound connection to a provider's edge, which re
 address and port and forwards traffic down the tunnel.
 
 - **Cost: free for Valheim.** playit.gg lists Valheim among its built-in free game presets,
-  alongside Minecraft, Palworld, Terraria and Factorio, and UDP tunnels are on the free tier.
-  Premium, at $3/month, gates generic TCP, TCP+UDP, SSH and HTTPS tunnels plus some additional game
-  presets ([playit.gg](https://playit.gg/), accessed 2026-09-22). For the title this documentation
-  is built around, this option costs nothing. A future title with no preset, needing a generic TCP
-  tunnel, would cost $3/month. Verify the current boundary before relying on it; free tiers rot
-  faster than anything else cited here.
+  alongside Minecraft, Palworld, Terraria and Factorio ([playit.gg](https://playit.gg/), accessed
+  2026-09-22). For the title this documentation is built around, this option costs nothing.
+  Premium exists at $3/month and gates some tunnel types and some additional game presets; **what
+  exactly falls on each side of that line is not stated clearly enough on the page to reproduce
+  here.** Three readings of it during this work produced three different answers, which says the
+  page is ambiguous rather than that anyone read it carelessly. If a future title needs a tunnel
+  type the free tier does not cover, check the current terms then. Free tiers rot faster than
+  anything else cited here.
 - **Effort on friends:** **none.** They receive an address and port and connect normally. This is
   the option's real advantage and it is a significant one.
 - **Latency:** every packet is relayed via the provider's nearest datacentre, in both directions.
@@ -295,8 +298,9 @@ out to it, and the VPS forwards UDP 2456-2457 down the tunnel.
 
 - **Cost:** a few currency units a month, and it is the *smallest possible* violation of the
   zero-recurring-cost constraint, since the VPS needs no CPU and no disk and the game still runs at
-  home. It is still a violation, and for Valheim specifically option C is free, which is most of
-  why this ranks below it.
+  home. It is still a violation, and for Valheim option C is free, which is most of why this ranks
+  below it. What this buys over C is not cost but **control**: the relay is yours, and you choose
+  its geography.
 - **Latency:** one extra hop, and the geography is yours to choose, which is the advantage over C.
   Put the VPS near the group and the penalty is small.
 - **Effort on friends:** none. They get a stable public address and port.
@@ -327,7 +331,7 @@ adding any infrastructure at all.
 |---|---|---|---|---|---|
 | A. Public IP from ISP | Maybe | Nothing | Yes | Best | May be refused |
 | B. Overlay VPN | Free | **Yes, each one** | **No** | Best | Excludes consoles |
-| C. Tunnel service | **Free for Valheim**; $3/mo for a title with no preset | Nothing | Yes | Relayed | Third-party dependency |
+| C. Tunnel service | **Free for Valheim**; check terms for other titles | Nothing | Yes | Relayed | Third-party dependency |
 | D. Relay VPS | ~$3-5/mo | Nothing | Yes | One chosen hop | Another machine to run |
 | E. Crossplay relay | Free | Nothing | Yes | Relayed | Rotating join code |
 

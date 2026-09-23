@@ -36,7 +36,7 @@ Vendor and standards documentation. These outrank everything below them.
 | [RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598) | IETF | 2012-04 | `100.64.0.0/10` is Shared Address Space for carrier-grade NAT. The CGNAT diagnostic |
 | [Tailscale pricing](https://tailscale.com/pricing) | Tailscale | no date on page | Personal plan: up to 6 users, unlimited user devices, up to 50 tagged resources, $1/month each beyond |
 | [Tailscale subnet routers](https://tailscale.com/kb/1019/subnets) | Tailscale | ongoing | What a subnet router reaches, direct peer-to-peer preference, its limitations |
-| [playit.gg](https://playit.gg/) | playit.gg | no date on page | **Valheim is a free game preset and UDP is on the free tier**; Premium at $3/month gates generic TCP, TCP+UDP, SSH and HTTPS; 19 datacentres; players install nothing |
+| [playit.gg](https://playit.gg/) | playit.gg | no date on page | **Valheim is a free game preset**; 19 datacentres; players install nothing. Premium is $3/month, but **the page does not state the free/Premium tunnel-type boundary clearly enough to cite**, so this documentation does not claim one |
 | [LinuxGSM Valheim](https://linuxgsm.com/servers/vhserver/) | LinuxGSM | ongoing | Valheim supported as `vhserver`; monitor, update and alerting features |
 | [Tailscale connection types](https://tailscale.com/kb/1257/connection-types) | Tailscale | ongoing | Connections start relayed via DERP and are upgraded to direct; direct is lowest latency |
 | [Pocketpair, Palworld Dedicated Server Guide](https://docs.palworldgame.com/dedicated-server-guide) | Pocketpair | ongoing | The vendor authority for the Palworld row. **Listed as where to verify, not as a source consulted**: the page did not render for this revision |
