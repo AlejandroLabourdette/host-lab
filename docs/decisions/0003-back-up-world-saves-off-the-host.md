@@ -116,4 +116,4 @@ nobody plays. A hot copy avoids the downtime and requires reasoning about genera
 - Iron Gate publishes an actual save-format reference, which would let the consistency checks move
   from observed behaviour to specified behaviour.
 - The group starts running several titles with meaningfully different save shapes, which is a
-  question for `platform-architecture.md`.
+  question for [`platform-architecture.md`](../platform-architecture.md).

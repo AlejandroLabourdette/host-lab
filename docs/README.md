@@ -17,6 +17,7 @@ The documents are written to be read in this order. Each one assumes the ones ab
 | 2 | [`networking.md`](networking.md) | How do friends on the internet reach a server sitting behind a household router? |
 | 3 | [`save-data-and-backups.md`](save-data-and-backups.md) | What is the world on disk, what has to be copied, and how do we know it would come back? |
 | 4 | [`always-on-operation.md`](always-on-operation.md) | What keeps the machine, the process and the world alive without anyone watching? |
+| 5 | [`platform-architecture.md`](platform-architecture.md) | What is shared across games, what is specific to one, and where does the boundary go? |
 
 More documents are added to this table as they are written. The set is not complete yet.
 
@@ -37,6 +38,7 @@ without destroying the record of why the shape is what it is.
 | [0002](decisions/0002-reach-the-server-from-the-internet.md) | Reach the server from the internet: diagnose, then branch | Accepted |
 | [0003](decisions/0003-back-up-world-saves-off-the-host.md) | Back up world saves off the host | Accepted |
 | [0004](decisions/0004-run-game-servers-as-containers.md) | Run game servers as containers | Accepted |
+| [0005](decisions/0005-describe-titles-with-a-declarative-manifest.md) | Describe titles with a declarative manifest | Accepted |
 
 ## Layout, and why it is this way
 
