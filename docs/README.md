@@ -22,8 +22,9 @@ The documents are written to be read in this order. Each one assumes the ones ab
 | 7 | [`titles/valheim.md`](titles/valheim.md) | The first concrete case, end to end: bare machine to friends connected. |
 | 8 | [`sources.md`](sources.md) | Where every claim came from, when it was true, and what to re-check when. |
 
-Cross-references between documents always point backwards in this order, so any document can be
-read without having read the ones after it.
+Each document assumes the ones above it and can be read without the ones below. Cross-references
+do point forward where a later document holds the detail, but **never for a prerequisite**: a
+forward link is always an offer of more, not a dependency you have to follow first.
 
 ## Decision records
 

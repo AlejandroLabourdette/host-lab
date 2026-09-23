@@ -207,7 +207,10 @@ Worth reading, because it is the exact shape of failure this section is about.
 file permissions `0644` indiscriminately to everything under `worlds_local/`, including the new
 per-world *directories*. A directory without the execute bit cannot have new entries created in it,
 so **every autosave failed, silently, while the container reported healthy.** The migration had
-already renamed the old `.db` to `.db.old`, so there was no fallback.
+already renamed the old `.db` aside to `.db.old`, so the server would not fall back to it on its
+own: the pre-1.0 file was still on disk, but nothing was going to load it, and by the time anyone
+noticed it was stale by however long the failure had gone undetected. A file the software will not
+read is not a fallback, it is an archaeology project.
 
 The lessons generalise past that one container:
 

@@ -41,9 +41,19 @@ Four things change that, and they are the real requirements:
 4. **Nobody knows whether it is up.** The most common question in practice is not "start it", it is
    "is it working, or is it me?"
 
-Note that three of those four are **information** problems, not control problems. That is the most
-useful finding in this document, and it shapes the recommendation: read-only status is worth more
-than a start button, is far safer, and should be built first.
+Those four split evenly: **1 and 2 need authority over the server; 3 and 4 only need information
+about it.** Two and two.
+
+The even split is less striking than a landslide would be, but it still points somewhere, because
+the two halves are not equally expensive. Needs 3 and 4 are answered by publishing what the host
+already knows, which grants nobody any power and cannot damage anything. Needs 1 and 2 require
+handing a destructive operation to people who cannot see what it does, and with it identity,
+authorization and an audit trail.
+
+So the recommendation does not rest on the count. It rests on that asymmetry, plus one observation
+about timing: **need 4 is live today and need 1 is not.** Nobody is currently fighting over the
+machine, because there is one title on it. Half the value is available immediately at almost no
+cost and no risk, and the expensive half has no trigger yet.
 
 ## What "start" and "stop" mean here
 
@@ -148,7 +158,8 @@ device on it is already authenticated, and a small web page can be served only o
 
 ### Rules regardless of choice
 
-- **Two roles, not one.** Friends get 1 to 6. The owner gets everything. Matching
+- **Two roles, not one.** Friends get every capability the table above assigns to "Everyone" or
+  "Friends" - 1 to 7 and 9. The owner gets those plus 8 and 10. Matching
   [`scope-and-goals.md`](scope-and-goals.md)'s two actors.
 - **Never expose unauthenticated control to the internet.** An open start/stop endpoint is remote
   code execution with extra steps.

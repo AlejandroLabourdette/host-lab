@@ -11,9 +11,14 @@ person who can start, stop or even check the server, the dependency has been ren
 removed, and goal G3 in [`scope-and-goals.md`](../scope-and-goals.md) is unmet.
 
 Examining the actual requests, documented in [`remote-control.md`](../remote-control.md), produced
-a result that changed the decision: **three of the four real needs are information, not control.**
-"Is it up", "how do I connect", "what is the current join code" and "is anyone playing" are all
-read-only. Only "the group moved to another game and Valheim is holding the RAM" needs authority.
+a result that changed the decision. The four real needs split **two and two**: freeing the machine
+for another title and unsticking a broken server both need authority; the crossplay join code and
+"is it up at all" only need information.
+
+What changed the decision is not the ratio but the asymmetry behind it. **The information half is
+nearly free and cannot damage anything; the control half is expensive and its central operation
+destroys data if done wrong.** And only the information half has a live trigger: there is one title
+on the machine today, so nothing is competing for it yet.
 
 Two constraints narrow the design:
 
@@ -34,10 +39,13 @@ Two constraints narrow the design:
 
 ### B. Always-on, plus read-only status published where the group already talks (chosen first step)
 
-- **For:** addresses three of the four real needs. Grants no authority to anyone, so nothing can
-  destroy a world. Nearly no attack surface. Small enough to actually get built.
-- **Against:** does not cover freeing the machine for another title.
-- **Verdict:** the right first step, because it is almost all of the value and none of the risk.
+- **For:** addresses the two information needs, which are the two that are live today. Grants no
+  authority to anyone, so nothing can destroy a world. Nearly no attack surface. Small enough to
+  actually get built.
+- **Against:** covers neither control need. Somebody still has to wait for the owner to free the
+  machine or unstick a hung server.
+- **Verdict:** the right first step. It takes the half of the value that is available now and none
+  of the risk, and it does not foreclose the other half.
 
 ### C. Full start/stop control for friends
 
